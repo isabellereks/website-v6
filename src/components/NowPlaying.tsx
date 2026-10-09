@@ -221,7 +221,7 @@ export default function NowPlaying() {
   const total = usingPreview ? preview.duration * 1000 : (track?.durationMs ?? 30_000);
 
   return (
-    <div className="relative h-[37px] w-[196px]">
+    <div className="relative h-[34px] w-[180px]">
       <div ref={islandRef} className="island absolute top-0 left-1/2 z-50 -translate-x-1/2" data-open={open}>
         {/* Compact: art leading, waveform trailing, camera space in the middle */}
         <button
@@ -232,25 +232,25 @@ export default function NowPlaying() {
           onClick={() => setOpen(true)}
           className="island-compact absolute inset-0 flex items-center justify-between pr-[12px] pl-[7px]"
         >
-          <Art src={track?.albumArt} size={23} radius={6} />
-          <Waveform playing={animating} tint={tint} height={14} />
+          <Art src={track?.albumArt} size={21} radius={5} />
+          <Waveform playing={animating} tint={tint} height={12} />
         </button>
 
         {/* Expanded, matching liam.cv / iOS: art + title, scrubber, centered transport */}
-        <div id="island-card" className="island-card absolute inset-0 flex flex-col px-[20px] pt-[20px] pb-[18px]" inert={!open}>
+        <div id="island-card" className="island-card absolute inset-0 flex flex-col px-[18px] pt-[18px] pb-[16px]" inert={!open}>
           <div className="flex items-center gap-[14px]">
             <a href={track?.url ?? "https://open.spotify.com"} target="_blank" rel="noopener noreferrer" aria-label="Open in Spotify">
-              <Art src={track?.albumArt} size={56} radius={12} />
+              <Art src={track?.albumArt} size={52} radius={11} />
             </a>
             <div className="min-w-0 flex-1">
-              <p className="truncate text-[17px] leading-[22px] font-semibold tracking-[-0.3px] text-white">
+              <p className="truncate text-[16px] leading-[21px] font-semibold tracking-[-0.3px] text-white">
                 {track?.title ?? "Not Playing"}
               </p>
-              <p className="truncate text-[15px] leading-[20px] tracking-[-0.2px] text-[#8e8e93]">{track?.artist ?? "Spotify"}</p>
+              <p className="truncate text-[14px] leading-[19px] tracking-[-0.2px] text-[#8e8e93]">{track?.artist ?? "Spotify"}</p>
             </div>
           </div>
 
-          <div className="mt-[16px] flex items-center gap-[8px] text-[11px] font-medium text-[#8e8e93] tabular-nums">
+          <div className="mt-[14px] flex items-center gap-[8px] text-[11px] font-medium text-[#8e8e93] tabular-nums">
             <span className="w-[28px]">{formatTime(elapsed)}</span>
             <span className="relative h-[4px] flex-1 overflow-hidden rounded-full bg-[#ffffff2e]">
               <span className="absolute inset-y-0 left-0 rounded-full bg-[#ffffffb3]" style={{ width: `${Math.min(100, (elapsed / total) * 100)}%` }} />
@@ -258,7 +258,7 @@ export default function NowPlaying() {
             <span className="w-[32px] text-right">-{formatTime(total - elapsed)}</span>
           </div>
 
-          <div className="mt-auto flex items-center justify-center gap-[52px] text-white">
+          <div className="mt-auto flex items-center justify-center gap-[48px] text-white">
             <button
               type="button"
               onClick={restart}

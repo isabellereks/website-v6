@@ -104,7 +104,8 @@
   background-image: none;
 }
 .spine-photo {
-  object-fit: cover;
+  /* Book widths come from each photo's real proportions, so fill without cropping. */
+  object-fit: fill;
 }
 .book-spine[data-photo='true']::after {
   /* Keep the same rounded-spine lighting over photos so they sit on the shelf. */
@@ -294,17 +295,8 @@
   }
   .book-slot {
     --cover-width: calc((var(--book-height) - 12px) * var(--cover-ratio));
-    flex-basis: calc(var(--book-width) - 2px);
+    flex-basis: var(--book-width);
     height: calc(var(--book-height) - 12px);
-  }
-  .book-model {
-    width: calc(var(--book-width) - 6px);
-  }
-  .book-cover {
-    left: calc(var(--book-width) - 6px);
-  }
-  .book-pages {
-    width: calc(var(--book-width) - 8px);
   }
   .book-slot:last-child {
     margin-left: 16px;
@@ -423,17 +415,19 @@
   padding-inline: 0;
   gap: 2px;
 }
+/* Books are drawn at their real spine width (from the spine photos), so no trimming here. */
 .book-slot {
-  flex-basis: calc(var(--book-width) - 3px);
+  flex-basis: var(--book-width);
 }
 .book-model {
-  width: calc(var(--book-width) - 7px);
+  left: 0;
+  width: var(--book-width);
 }
 .book-cover {
-  left: calc(var(--book-width) - 7px);
+  left: var(--book-width);
 }
 .book-pages {
-  width: calc(var(--book-width) - 9px);
+  width: calc(var(--book-width) - 2px);
 }
 
 @media (prefers-reduced-motion: reduce) {

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import Image from "next/image";
 import type { SocialStats } from "@/app/api/socials/route";
 
@@ -96,7 +96,20 @@ const socials: Social[] = [
 // A link that tints to its brand color and shows a tiny card on hover, like liam.cv.
 function SocialLink({ social, stats }: { social: Social; stats: SocialStats | null }) {
   const [open, setOpen] = useState(false);
+  const [shift, setShift] = useState(0);
   const leave = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const anchorRef = useRef<HTMLSpanElement>(null);
+  const cardRef = useRef<HTMLSpanElement>(null);
+
+  // Nudge the card sideways so it stays on screen near the edges.
+  useLayoutEffect(() => {
+    if (!open || !anchorRef.current || !cardRef.current) return;
+    const a = anchorRef.current.getBoundingClientRect();
+    const w = cardRef.current.offsetWidth;
+    const centered = a.left + a.width / 2 - w / 2;
+    const clamped = Math.min(Math.max(centered, 12), window.innerWidth - 12 - w);
+    setShift(clamped - centered);
+  }, [open]);
 
   const show = () => {
     if (leave.current) clearTimeout(leave.current);
@@ -108,10 +121,11 @@ function SocialLink({ social, stats }: { social: Social; stats: SocialStats | nu
 
   return (
     <span
+      ref={anchorRef}
       className="relative inline-block"
       onPointerEnter={(e) => e.pointerType === "mouse" && show()}
       onPointerLeave={hide}
-      style={{ "--brand": social.brand } as React.CSSProperties}
+      style={{ "--brand": social.brand, "--shift": `${shift}px` } as React.CSSProperties}
     >
       <a
         className="social-link link"
@@ -119,12 +133,14 @@ function SocialLink({ social, stats }: { social: Social; stats: SocialStats | nu
         href={social.href}
         target={social.href.startsWith("mailto") ? undefined : "_blank"}
         rel="noopener noreferrer"
-        onFocus={show}
+        // Keyboard focus only, so a tap on a phone doesn't flash the card.
+        onFocus={(e) => e.currentTarget.matches(":focus-visible") && show()}
         onBlur={hide}
       >
         {social.label}
       </a>
       <span
+        ref={cardRef}
         className="social-card absolute top-full left-1/2 z-40 mt-2 w-max max-w-[320px] min-w-[220px] rounded-2xl bg-white p-3 text-left shadow-[0_1px_2px_rgb(0_0_0/0.04),0_12px_32px_-8px_rgb(0_0_0/0.18)] ring-1 ring-black/[0.06]"
         data-open={open}
         role="tooltip"
