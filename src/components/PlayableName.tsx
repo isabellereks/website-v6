@@ -12,8 +12,8 @@ interface Song {
   stepMs: number;
 }
 
-const E4 = 329.63, F4 = 349.23, Fs4 = 369.99, G4 = 392.0, A4 = 440.0, B4 = 493.88;
-const C5 = 523.25, Cs5 = 554.37, D5 = 587.33, E5 = 659.25, F5 = 698.46, A5 = 880.0;
+const E4 = 329.63, G4 = 392.0, A4 = 440.0, B4 = 493.88;
+const C5 = 523.25, D5 = 587.33, E5 = 659.25, F5 = 698.46, A5 = 880.0;
 
 // Melodies transcribed from fan kalimba/piano letter-note tabs.
 const SONGS: Song[] = [
@@ -25,11 +25,12 @@ const SONGS: Song[] = [
     stepMs: 130,
   },
   {
-    // Red Velvet "Feel My Rhythm": "feel my rhythm, come with me…" (lowercase = natural, uppercase = sharp)
+    // Red Velvet "Feel My Rhythm", "Feel my rhythm, come with me" (keylimba cover):
+    // 1 1 · 1 · 1 · 6 · 1 · 1 · 7 3  →  C C C C A C C B E
     title: "Feel My Rhythm",
-    notes: [F4, F4, F4, Fs4, F4, F4, Cs5, Cs5, F5, F4, F4, F4, F4, F4, F4, Fs4, F4],
-    steps: [0, 2, 4, 6, 9, 10, 12, 13, 14, 16, 17, 18, 19, 20, 21, 22, 25],
-    stepMs: 95,
+    notes: [C5, C5, C5, C5, A4, C5, C5, B4, E5],
+    steps: [0, 1, 3, 5, 7, 9, 11, 13, 14],
+    stepMs: 120,
   },
   {
     // NewJeans "Hype Boy" synth hook: E E' C' A E D' B G | G D' B G A C' A E
