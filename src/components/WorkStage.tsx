@@ -70,13 +70,19 @@ export default function WorkStage() {
     });
     window.addEventListener("resize", measure);
     window.addEventListener("scroll", measure, { passive: true });
+    // Watch the content itself (body is pinned to the window height, so it never
+    // resizes) and re-measure once web fonts land, since they change text height.
     const observer = new ResizeObserver(measure);
-    observer.observe(document.body);
+    const content = anchorRef.current?.closest("main") ?? document.body;
+    observer.observe(content);
+    document.fonts.ready.then(measure);
+    document.fonts.addEventListener("loadingdone", measure);
     return () => {
       cancelAnimationFrame(id);
       cancelAnimationFrame(enterId);
       window.removeEventListener("resize", measure);
       window.removeEventListener("scroll", measure);
+      document.fonts.removeEventListener("loadingdone", measure);
       observer.disconnect();
     };
   }, [mounted]);
