@@ -73,23 +73,36 @@ export default function WorkTabs() {
         {tab === "Work" && <WorkStage />}
         {tab === "About" && <About />}
         {tab === "Writing" && (
-          <ul className="space-y-2 text-[16px]">
-            {writing.map((essay) => (
-              <li key={essay.url}>
-                <a className="link" href={essay.url}>
-                  {essay.title}
-                </a>
-                <span className="text-muted">
-                  {essay.publication ? ` · ${essay.publication}` : ""} · {essay.date}
-                </span>
-              </li>
-            ))}
-            <li>
-              <a className="link !text-muted" href="https://isaishangry.substack.com/">
-                More on Substack
-              </a>
-            </li>
-          </ul>
+          // v4-style rows: year, title, date, with hairlines between.
+          <div>
+            <ul className="divide-y divide-rule">
+              {writing.map((essay) => (
+                <li key={essay.url}>
+                  <a
+                    href={essay.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="group grid grid-cols-[3.5rem_1fr_auto] items-baseline gap-x-4 py-3"
+                  >
+                    <span className="text-[#c7c7cc] tabular-nums">{essay.date.slice(-4)}</span>
+                    <span className="text-ink transition-colors group-hover:text-muted">
+                      {essay.title}
+                      {essay.publication && <span className="ml-2 text-[14px] text-muted">{essay.publication}</span>}
+                    </span>
+                    <span className="text-[14px] text-[#c7c7cc] tabular-nums">{essay.date}</span>
+                  </a>
+                </li>
+              ))}
+            </ul>
+            <a
+              href="https://isaishangry.substack.com/"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="link mt-3 inline-block text-[14px] !text-muted"
+            >
+              Read more on Substack →
+            </a>
+          </div>
         )}
         {tab === "Reading" && (
           <div className={bleed}>
