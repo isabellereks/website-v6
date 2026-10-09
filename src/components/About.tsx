@@ -5,7 +5,14 @@ import PhotoStack from "./PhotoStack";
 const about: Paragraph[] = [
   {
     runs: [
-      { text: "Most recently I worked on policy and a caregiver resource database at " },
+      { text: "Right now I’m researching data center procurement with Lucia Velasco and Daniel Zhang, and working with " },
+      { text: "Advocates for Youth", href: "https://www.advocatesforyouth.org/" },
+      { text: " on reproductive policy in Washington state and D.C." },
+    ],
+  },
+  {
+    runs: [
+      { text: "Before that, I worked on policy and a caregiver resource database at " },
       { text: "NAPCA", href: "https://www.napca.org/" },
       { text: ", and on operations and growth at " },
       { text: "Million", href: "https://million.dev" },
@@ -14,7 +21,7 @@ const about: Paragraph[] = [
   },
   {
     runs: [
-      { text: "Before that, I was on race and social justice at the " },
+      { text: "Earlier, I was on race and social justice at the " },
       { text: "City of Seattle", href: "https://www.seattle.gov/city-light" },
       { text: ", and did community work with the " },
       { text: "Oregon Health Equity Alliance", href: "https://www.oregonhealthequity.org/" },
