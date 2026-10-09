@@ -221,7 +221,7 @@ export default function NowPlaying() {
   const total = usingPreview ? preview.duration * 1000 : (track?.durationMs ?? 30_000);
 
   return (
-    <div className="relative h-[37px] w-[236px]">
+    <div className="relative h-[37px] w-[196px]">
       <div ref={islandRef} className="island absolute top-0 left-1/2 z-50 -translate-x-1/2" data-open={open}>
         {/* Compact: art leading, waveform trailing, camera space in the middle */}
         <button

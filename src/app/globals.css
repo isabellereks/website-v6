@@ -37,8 +37,7 @@
   --color-muted: #6e6e73;
   --color-rule: #e8e8ed;
   --color-rose: #ad606e;
-  /* PP Neue Gstaad Regular as the main face (arlan.me-style); Open Runde if the font files aren't present. */
-  --font-sans: "PP Neue Gstaad", var(--font-open-runde), -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+  --font-sans: var(--font-open-runde), -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
   --font-display: "PP Neue Gstaad", var(--font-inter-tight), sans-serif;
 }
 
@@ -61,7 +60,7 @@ body {
   font-family: var(--font-sans);
   font-size: 16px;
   line-height: 26px;
-  letter-spacing: 0;
+  letter-spacing: -0.011em;
   -webkit-font-smoothing: antialiased;
 }
 
@@ -183,7 +182,7 @@ body {
 /* Dynamic Island. The shape springs open; compact content fades out first,
    then the card fades in once there's room, like iOS. */
 .island {
-  width: 236px;
+  width: 196px;
   height: 37px;
   border-radius: 18.5px;
   overflow: hidden;
