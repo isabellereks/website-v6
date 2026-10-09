@@ -4,10 +4,14 @@ import { useEffect, useRef } from "react";
 
 const NAME = "Isabelle Reksopuro";
 
-// The synth hook from NewJeans' "Hype Boy" (A minor), from a kalimba tab:
-// E E' C' A E D' B G | G D' B G A C' A E
-const E4 = 329.63, G4 = 392.0, A4 = 440.0, B4 = 493.88, C5 = 523.25, D5 = 587.33, E5 = 659.25;
-const HYPE_BOY = [E4, E5, C5, A4, E4, D5, B4, G4, G4, D5, B4, G4, A4, C5, A4, E4];
+// "Feel my rhythm, come with me…" from Red Velvet's "Feel My Rhythm", from a
+// piano letter-note tab (lowercase = natural, uppercase = sharp):
+// f f f F f f C' C' f' f f f f f f F f — 17 notes, one per letter of the name.
+const F4 = 349.23, Fs4 = 369.99, Cs5 = 554.37, F5 = 698.46;
+const HOOK = [F4, F4, F4, Fs4, F4, F4, Cs5, Cs5, F5, F4, F4, F4, F4, F4, F4, Fs4, F4];
+// Each note's position in the tab, in sixteenth-note steps, for the click playback rhythm.
+const STEPS = [0, 2, 4, 6, 9, 10, 12, 13, 14, 16, 17, 18, 19, 20, 21, 22, 25];
+const STEP_MS = 95;
 
 // liam.cv-style name: letters hop and blush on hover, and each one plays the
 // next note of the hook. Browsers only allow sound after a visitor's first
@@ -71,21 +75,21 @@ export default function PlayableName() {
   };
 
   // Letters are numbered skipping the space, so the hook runs straight across the name.
-  const noteIndex = (i: number) => NAME.slice(0, i).replace(/ /g, "").length % HYPE_BOY.length;
+  const noteIndex = (i: number) => NAME.slice(0, i).replace(/ /g, "").length % HOOK.length;
 
   const play = (i: number) => {
     hop(i);
-    note(HYPE_BOY[noteIndex(i)]);
+    note(HOOK[noteIndex(i)]);
   };
 
   const playHook = () => {
     // The click itself unlocks audio (the window listener runs first).
     const letters = NAME.split("").map((ch, i) => (ch === " " ? -1 : i)).filter((i) => i >= 0);
-    HYPE_BOY.forEach((freq, k) => {
+    HOOK.forEach((freq, k) => {
       setTimeout(() => {
         hop(letters[k % letters.length]);
         note(freq);
-      }, k * 150);
+      }, STEPS[k] * STEP_MS);
     });
   };
 
