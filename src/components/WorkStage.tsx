@@ -24,9 +24,14 @@ if (typeof window !== "undefined") {
 const LABEL_SPACE = 56; // room above the laptop for the project label
 const CONTROLS_SPACE = 120; // room below for the slider and details
 
-// liam.cv-style work view. At rest the MacBook peeks up from the bottom of the
-// window; scrolling down (or clicking it) lifts it to the center while the intro
-// fades away. Scrolling up, Escape, or clicking the background puts it back.
+// liam.cv-style work view. At rest the MacBook sits on the page just below the
+// tabs, peeking up from the bottom; scrolling down (or clicking it) lifts it to
+// the center of the window while the intro fades away. Scrolling up, Escape, or
+// clicking the background puts it back.
+//
+// The stage is positioned in page coordinates (not fixed to the window), so the
+// resting laptop scrolls with the content and can never drift over the tabs.
+const PEEK = 340; // how much of the resting laptop the page leaves room for
 export default function WorkStage() {
   const anchorRef = useRef<HTMLDivElement>(null);
   const laptopRef = useRef<HTMLDivElement>(null);
@@ -36,7 +41,7 @@ export default function WorkStage() {
   const [focused, setFocused] = useState(false);
   const [index, setIndex] = useState(0);
   const [detailsOpen, setDetailsOpen] = useState(false);
-  const [layout, setLayout] = useState({ restTop: 0, focusTop: 0, laptopHeight: 0 });
+  const [layout, setLayout] = useState({ restTop: 0, focusTop: 0, laptopHeight: 0, scrollY: 0, vh: 0 });
 
   // Scroll gestures that began before the stage appeared (or before the last
   // open/close) are trackpad momentum, not intent, so they're ignored.
@@ -56,9 +61,11 @@ export default function WorkStage() {
       const vh = window.innerHeight;
       const h = laptop.offsetHeight;
       setLayout({
-        restTop: anchor.getBoundingClientRect().top,
+        restTop: anchor.getBoundingClientRect().top + window.scrollY,
         focusTop: Math.max(LABEL_SPACE + 16, (vh - h - CONTROLS_SPACE + LABEL_SPACE) / 2),
         laptopHeight: h,
+        scrollY: window.scrollY,
+        vh,
       });
     };
     let enterId = 0;
@@ -87,11 +94,14 @@ export default function WorkStage() {
     };
   }, [mounted]);
 
-  // Fade the intro while focused.
+  // Fade the intro and hold the page still while focused.
   useEffect(() => {
-    document.documentElement.dataset.workFocus = String(focused);
+    const html = document.documentElement;
+    html.dataset.workFocus = String(focused);
+    if (focused) html.style.overflow = "hidden";
     return () => {
-      delete document.documentElement.dataset.workFocus;
+      delete html.dataset.workFocus;
+      html.style.overflow = "";
     };
   }, [focused]);
 
@@ -143,10 +153,18 @@ export default function WorkStage() {
   const project = projects[index];
   const go = (next: number) => setIndex((next + projects.length) % projects.length);
 
+  // Focused position is the window's center, in page coordinates.
+  const focusY = layout.scrollY + layout.focusTop;
+  // Room for the resting laptop to peek below the tabs, clipped like liam.cv;
+  // when focused, cover the whole window.
+  const restHeight = Math.max(layout.vh, layout.restTop + PEEK);
+  const stageHeight = focused ? Math.max(restHeight, layout.scrollY + layout.vh) : restHeight;
+
   const stage = (
     <div
-      className="work-stage fixed inset-0 z-30 overflow-hidden"
+      className="work-stage absolute top-0 left-0 z-30 w-full overflow-hidden"
       data-focused={focused}
+      style={{ height: stageHeight }}
       onClick={(e) => {
         if (focused && e.target === e.currentTarget) focus(false);
       }}
@@ -154,7 +172,7 @@ export default function WorkStage() {
       {/* Project label above the laptop */}
       <div
         className="work-chrome absolute left-1/2 -translate-x-1/2 text-[15px] whitespace-nowrap"
-        style={{ top: layout.focusTop - LABEL_SPACE + 12 }}
+        style={{ top: focusY - LABEL_SPACE + 12 }}
       >
         <a className="link" href={project.url} target="_blank" rel="noopener noreferrer">
           {project.name}
@@ -169,7 +187,7 @@ export default function WorkStage() {
         style={{
           top: 0,
           opacity: entered ? 1 : 0,
-          transform: `translateX(-50%) translateY(${focused ? layout.focusTop : layout.restTop + (entered ? 0 : 48)}px) scale(${focused ? 1 : 0.9})`,
+          transform: `translateX(-50%) translateY(${focused ? focusY : layout.restTop + (entered ? 0 : 48)}px) scale(${focused ? 1 : 0.9})`,
         }}
       >
         {/* Click the resting laptop to lift it; the site becomes usable once focused. */}
@@ -199,7 +217,7 @@ export default function WorkStage() {
       {/* Slider and details below the laptop */}
       <div
         className="work-chrome absolute left-1/2 flex w-[min(560px,calc(100vw-32px))] -translate-x-1/2 flex-col items-center"
-        style={{ top: layout.focusTop + layout.laptopHeight + 4 }}
+        style={{ top: focusY + layout.laptopHeight + 4 }}
       >
         <div className="flex items-center gap-2">
           <button
