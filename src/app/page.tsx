@@ -35,8 +35,8 @@ export default function Home() {
           <a className="link" href="https://www.washington.edu/">
             University of Washington
           </a>
-          . Too many of the people writing our tech laws don’t know how wifi works, so I’m working toward AI
-          safety and policy that protects everyday people.
+          . Half of Congress would need ChatGPT to explain ChatGPT, so I’m working on AI safety and policy that
+          protects everyday people.
         </p>
         <p>
           I’ve worked at{" "}
