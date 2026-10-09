@@ -21,10 +21,10 @@ interface Line {
   muted?: boolean;
 }
 
-const BOWL = 132; // drawing size in px
-const RADIUS = BOWL / 2 + 14; // text keeps this far from the bowl's center
+const BOWL = 104; // drawing size in px
+const RADIUS = BOWL / 2 + 10; // text keeps this far from the bowl's center
 const MIN_SLOT = 56; // don't squeeze words into slivers
-const PARAGRAPH_GAP = 14;
+const PARAGRAPH_GAP = 10;
 
 // Free horizontal slots for one line, after cutting out the circle around the bowl.
 function slotsFor(top: number, bottom: number, width: number, cx: number, cy: number) {
@@ -186,7 +186,7 @@ export default function FlowText({ paragraphs }: { paragraphs: Paragraph[] }) {
   }, []);
 
   return (
-    <div ref={boxRef} className="relative text-[17px] leading-[1.65]" style={{ height: layout?.height }}>
+    <div ref={boxRef} className="relative text-[16px] leading-[26px]" style={{ height: layout?.height }}>
       {layout ? (
         <>
           {layout.lines.map((line, i) => (

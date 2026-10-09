@@ -1,7 +1,19 @@
 import type { Metadata } from "next";
 import Script from "next/script";
+import localFont from "next/font/local";
 import { Inter_Tight, Instrument_Serif, Mrs_Saint_Delafield } from "next/font/google";
 import "./globals.css";
+
+// Open Runde (from v4): a rounded Inter, SIL Open Font License.
+const openRunde = localFont({
+  src: [
+    { path: "./fonts/OpenRunde-Regular.woff2", weight: "400" },
+    { path: "./fonts/OpenRunde-Medium.woff2", weight: "500" },
+    { path: "./fonts/OpenRunde-SemiBold.woff2", weight: "600" },
+    { path: "./fonts/OpenRunde-Bold.woff2", weight: "700" },
+  ],
+  variable: "--font-open-runde",
+});
 
 const interTight = Inter_Tight({
   variable: "--font-inter-tight",
@@ -29,7 +41,7 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
-    <html lang="en" className={`${interTight.variable} ${instrumentSerif.variable} ${signature.variable}`}>
+    <html lang="en" className={`${openRunde.variable} ${interTight.variable} ${instrumentSerif.variable} ${signature.variable}`}>
       <head>
         {process.env.NODE_ENV === "development" && (
           <Script

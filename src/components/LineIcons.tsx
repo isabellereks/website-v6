@@ -1,7 +1,7 @@
 // Small isometric line drawings that sit inline with text, Gordon Tu style.
 const iconProps = {
-  width: 30,
-  height: 30,
+  width: 24,
+  height: 24,
   viewBox: "0 0 30 30",
   fill: "none",
   stroke: "currentColor",
@@ -9,7 +9,7 @@ const iconProps = {
   strokeLinejoin: "round" as const,
   strokeLinecap: "round" as const,
   "aria-hidden": true,
-  className: "inline-block align-[-0.35em] mx-1.5 text-ink",
+  className: "inline-block align-[-0.3em] mx-1 text-ink",
 };
 
 // Stacked sheets: a tracker.

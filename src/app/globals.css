@@ -37,7 +37,7 @@
   --color-muted: #6e6e73;
   --color-rule: #e8e8ed;
   --color-rose: #ad606e;
-  --font-sans: "PP Neue Gstaad", var(--font-inter-tight), ui-sans-serif, system-ui, sans-serif;
+  --font-sans: var(--font-open-runde), -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
   --font-serif: var(--font-instrument-serif), Georgia, serif;
   --font-display: "PP Neue Gstaad", var(--font-inter-tight), sans-serif;
   --font-script: var(--font-signature), cursive;
@@ -45,6 +45,8 @@
 
 :root {
   color-scheme: light;
+  /* One easing for everything: a soft ease-out with no overshoot. */
+  --ease: cubic-bezier(0.22, 1, 0.36, 1);
 }
 
 html {
@@ -56,7 +58,9 @@ body {
   background: var(--color-paper);
   color: var(--color-ink);
   font-family: var(--font-sans);
-  font-weight: 300;
+  font-size: 16px;
+  line-height: 26px;
+  letter-spacing: -0.011em;
   -webkit-font-smoothing: antialiased;
 }
 
@@ -66,15 +70,15 @@ body {
 }
 
 .link {
+  color: var(--color-ink);
   text-decoration: underline;
   text-decoration-thickness: 1px;
   text-underline-offset: 3px;
-  text-decoration-color: var(--color-rule);
-  transition: color 200ms, text-decoration-color 200ms;
+  text-decoration-color: #d2d2d7;
+  transition: text-decoration-color 200ms;
 }
 .link:hover {
-  color: var(--color-rose);
-  text-decoration-color: var(--color-rose);
+  text-decoration-color: var(--color-ink);
 }
 
 :focus-visible {
@@ -82,79 +86,18 @@ body {
   outline-offset: 3px;
 }
 
-/* Paper-style grid: hairline cells with small square handles at the corners. */
-.sheet {
-  max-width: 1120px;
-  margin-inline: auto;
-  background: var(--color-paper);
-  border-inline: 1px solid var(--color-rule);
-}
-.row {
-  display: grid;
-  border-top: 1px solid var(--color-rule);
-}
-.cell {
-  position: relative;
-  padding: 2rem 1.25rem;
-}
-.row > .cell + .cell {
-  border-top: 1px solid var(--color-rule);
-}
-@media (min-width: 768px) {
-  .cell {
-    padding: 2.5rem;
-  }
-  .row > .cell + .cell {
-    border-top: 0;
-    border-left: 1px solid var(--color-rule);
-  }
-}
-.cell::before,
-.cell::after {
-  content: "";
-  position: absolute;
-  top: -4px;
-  z-index: 1;
-  width: 7px;
-  height: 7px;
-  border: 1px solid #d2d2d7;
-  background: var(--color-paper);
-}
-.cell::before {
-  left: -4px;
-}
-.cell::after {
-  right: -4px;
-}
-
-.label {
-  font-size: 13px;
-  color: var(--color-muted);
-}
-
-/* Slide up out of a blur when scrolled into view. */
+/* Fade in with a small rise on first view. */
 [data-reveal] {
   opacity: 0;
-  transform: translateY(48px);
-  filter: blur(12px);
+  transform: translateY(8px);
   transition:
-    opacity 900ms cubic-bezier(0.2, 0.7, 0.2, 1),
-    transform 900ms cubic-bezier(0.2, 0.7, 0.2, 1),
-    filter 900ms cubic-bezier(0.2, 0.7, 0.2, 1);
+    opacity 700ms var(--ease),
+    transform 700ms var(--ease);
   transition-delay: var(--delay, 0ms);
 }
 [data-reveal][data-inview="true"] {
   opacity: 1;
   transform: none;
-  filter: none;
-}
-
-.signature {
-  clip-path: inset(0 100% 0 0);
-  transition: clip-path 1800ms cubic-bezier(0.6, 0, 0.3, 1) 300ms;
-}
-[data-inview="true"] .signature {
-  clip-path: inset(0 0 0 0);
 }
 
 /* Line drawings: every stroke has pathLength=1 and draws in when its svg is in view. */
@@ -163,8 +106,8 @@ body {
 .draw circle {
   stroke-dasharray: 1;
   stroke-dashoffset: 1;
-  transition: stroke-dashoffset 1400ms cubic-bezier(0.65, 0, 0.35, 1);
-  transition-delay: calc(var(--i, 0) * 45ms);
+  transition: stroke-dashoffset 1600ms var(--ease);
+  transition-delay: calc(var(--i, 0) * 30ms);
 }
 .draw[data-inview="true"] path,
 .draw[data-inview="true"] line,
@@ -173,7 +116,7 @@ body {
 }
 .draw .fade {
   opacity: 0;
-  transition: opacity 800ms ease 1200ms;
+  transition: opacity 600ms var(--ease) 1000ms;
 }
 .draw[data-inview="true"] .fade {
   opacity: 1;
@@ -181,7 +124,7 @@ body {
 
 .draw .steam {
   stroke-dasharray: 0.35 0.65;
-  animation: steam 3.2s linear infinite;
+  animation: steam 6s linear infinite;
 }
 @keyframes steam {
   to {
@@ -192,15 +135,11 @@ body {
 .book {
   transform-box: fill-box;
   transform-origin: bottom center;
-  transition: transform 350ms cubic-bezier(0.2, 0.75, 0.2, 1);
+  transition: transform 300ms var(--ease);
 }
 .book-link:hover .book,
 .book-link:focus-visible .book {
-  transform: translateY(-10px);
-}
-.book-link:hover .book path,
-.book-link:focus-visible .book path {
-  stroke: var(--color-rose);
+  transform: translateY(-4px);
 }
 .book-link:focus-visible {
   outline: none;
@@ -214,10 +153,6 @@ body {
     opacity: 1;
     transform: none;
     filter: none;
-    transition: none;
-  }
-  .signature {
-    clip-path: none;
     transition: none;
   }
   .draw path,
@@ -245,9 +180,9 @@ body {
   height: 36px;
   border-radius: 18px;
   transition:
-    width 520ms cubic-bezier(0.3, 1.3, 0.5, 1),
-    height 520ms cubic-bezier(0.3, 1.3, 0.5, 1),
-    border-radius 520ms cubic-bezier(0.3, 1.3, 0.5, 1);
+    width 450ms var(--ease),
+    height 450ms var(--ease),
+    border-radius 450ms var(--ease);
 }
 .island[data-open="true"] {
   width: 340px;
@@ -266,4 +201,20 @@ body {
 @media (prefers-reduced-motion: reduce) {
   .island { transition: none; }
   .island-bar { animation: none; }
+}
+
+/* Tab panels crossfade in. */
+.tab-panel {
+  animation: panel-in 400ms var(--ease);
+}
+@keyframes panel-in {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .tab-panel {
+    animation: none;
+  }
 }

@@ -8,8 +8,8 @@ export type DecodePart =
   | { icon: React.ReactNode; href: string; label: string };
 
 const GLYPHS = "abcdefghijklmnopqrstuvwxyz";
-const DURATION_MS = 1400;
-const TICK_MS = 55;
+const DURATION_MS = 900;
+const TICK_MS = 60;
 
 // Deterministic scramble so the server and first client render match.
 function scramble(text: string, seed: number) {
