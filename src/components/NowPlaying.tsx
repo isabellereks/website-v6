@@ -123,8 +123,9 @@ export default function NowPlaying() {
 
   useEffect(() => {
     let cancelled = false;
+    let songEnd: ReturnType<typeof setTimeout> | undefined;
     const load = () =>
-      fetch("/api/now-playing")
+      fetch("/api/now-playing", { cache: "no-store" })
         .then((r) => (r.ok ? r.json() : null))
         .then((t: Track | null) => {
           if (cancelled) return;
@@ -140,13 +141,25 @@ export default function NowPlaying() {
             return t;
           });
           setLiveClock({ fetchedAt: Date.now(), now: Date.now() });
+          // Check again right when the current song should end.
+          clearTimeout(songEnd);
+          if (t?.isPlaying && t.progressMs !== null) {
+            songEnd = setTimeout(load, Math.max(1000, t.durationMs - t.progressMs + 1500));
+          }
         })
         .catch(() => {});
     load();
-    const id = setInterval(load, 30_000);
+    // Poll every 10s while the tab is visible, and refresh as soon as it comes back.
+    const id = setInterval(() => {
+      if (document.visibilityState === "visible") load();
+    }, 10_000);
+    const onVisible = () => document.visibilityState === "visible" && load();
+    document.addEventListener("visibilitychange", onVisible);
     return () => {
       cancelled = true;
       clearInterval(id);
+      clearTimeout(songEnd);
+      document.removeEventListener("visibilitychange", onVisible);
       audioRef.current?.pause();
     };
   }, []);

@@ -57,7 +57,11 @@ async function findPreview(title: string, artist: string) {
 // Why the island is empty, reported in a response header (never includes secrets).
 let status = "ok";
 
+// Spotify access tokens last an hour; reuse one while this server instance is warm.
+let cachedToken: { value: string; expiresAt: number } | null = null;
+
 async function getAccessToken() {
+  if (cachedToken && Date.now() < cachedToken.expiresAt) return cachedToken.value;
   const { SPOTIFY_CLIENT_ID, SPOTIFY_CLIENT_SECRET, SPOTIFY_REFRESH_TOKEN } = process.env;
   const missing = Object.entries({ SPOTIFY_CLIENT_ID, SPOTIFY_CLIENT_SECRET, SPOTIFY_REFRESH_TOKEN })
     .filter(([, v]) => !v?.trim())
@@ -80,7 +84,8 @@ async function getAccessToken() {
     status = `token refresh failed: ${res.status} ${err.error ?? ""}`.trim();
     return null;
   }
-  const data: { access_token: string } = await res.json();
+  const data: { access_token: string; expires_in: number } = await res.json();
+  cachedToken = { value: data.access_token, expiresAt: Date.now() + (data.expires_in - 60) * 1000 };
   return data.access_token;
 }
 
@@ -111,7 +116,8 @@ export async function GET() {
   if (track) track.previewUrl = await findPreview(track.title, track.artist);
   return Response.json(track, {
     headers: {
-      "Cache-Control": "public, s-maxage=15, stale-while-revalidate=30",
+      // Short CDN cache: near real time, but a burst of visitors shares one Spotify call.
+      "Cache-Control": "public, s-maxage=5, stale-while-revalidate=5",
       "X-Now-Playing-Status": status,
     },
   });
