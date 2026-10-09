@@ -7,7 +7,7 @@ const about: Paragraph[] = [
     runs: [
       { text: "Right now I’m researching data center procurement with Lucia Velasco and Daniel Zhang, and working with " },
       { text: "Advocates for Youth", href: "https://www.advocatesforyouth.org/" },
-      { text: " on reproductive policy in Washington state and D.C." },
+      { text: " on policy for survivors of sexual violence in Washington state and D.C." },
     ],
   },
   {
