@@ -23,7 +23,7 @@ export default function Home() {
       </Reveal>
 
       <Reveal delay={60} className="mt-16 md:mt-20">
-        <h1 className="font-display text-[20px] leading-[28px] font-normal text-rose">Isabelle Reksopuro</h1>
+        <h1 className="font-display text-[20px] leading-[28px] font-normal transition-colors duration-300 ease-[var(--ease)] hover:text-rose">Isabelle Reksopuro</h1>
         <p className="mt-3 font-display text-[19px] leading-[30px] font-normal">
           <DecodeText parts={summary} />
         </p>
