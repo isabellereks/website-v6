@@ -131,11 +131,13 @@ export default function WorkTabs() {
                 <a className="link" href={essay.url}>
                   {essay.title}
                 </a>
-                <span className="text-muted"> · {essay.date}</span>
+                <span className="text-muted">
+                  {essay.publication ? ` · ${essay.publication}` : ""} · {essay.date}
+                </span>
               </li>
             ))}
             <li>
-              <a className="link text-muted" href="https://isaishangry.substack.com/">
+              <a className="link !text-muted" href="https://isaishangry.substack.com/">
                 More on Substack
               </a>
             </li>
