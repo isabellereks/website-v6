@@ -94,16 +94,4 @@ export const books: Book[] = [
     height: 172,
     width: 32,
   },
-  {
-    id: "writing",
-    title: "Writing",
-    author: "Isabelle Reksopuro",
-    category: "Substack",
-    href: "https://isaishangry.substack.com/",
-    description: "Essays on Substack.",
-    color: "#34446d",
-    ink: "#efe2b2",
-    height: 172,
-    width: 36,
-  },
 ];
