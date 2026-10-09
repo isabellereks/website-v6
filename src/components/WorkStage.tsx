@@ -15,6 +15,8 @@ export default function WorkStage() {
   const anchorRef = useRef<HTMLDivElement>(null);
   const laptopRef = useRef<HTMLDivElement>(null);
   const [mounted, setMounted] = useState(false);
+  // Hidden until measured, then fades in while rising into its resting spot.
+  const [entered, setEntered] = useState(false);
   const [focused, setFocused] = useState(false);
   const [index, setIndex] = useState(0);
   const [detailsOpen, setDetailsOpen] = useState(false);
@@ -39,9 +41,12 @@ export default function WorkStage() {
         laptopHeight: h,
       });
     };
+    let enterId = 0;
     const id = requestAnimationFrame(() => {
       setMounted(true);
       measure();
+      // Two frames later the measured position has painted, so the entrance can animate from it.
+      enterId = requestAnimationFrame(() => requestAnimationFrame(() => setEntered(true)));
     });
     window.addEventListener("resize", measure);
     window.addEventListener("scroll", measure, { passive: true });
@@ -49,6 +54,7 @@ export default function WorkStage() {
     observer.observe(document.body);
     return () => {
       cancelAnimationFrame(id);
+      cancelAnimationFrame(enterId);
       window.removeEventListener("resize", measure);
       window.removeEventListener("scroll", measure);
       observer.disconnect();
@@ -122,9 +128,11 @@ export default function WorkStage() {
       <div
         ref={laptopRef}
         className="work-laptop absolute left-1/2 w-[min(880px,calc(100vw-32px))]"
+        data-entered={entered}
         style={{
           top: 0,
-          transform: `translateX(-50%) translateY(${focused ? layout.focusTop : layout.restTop}px) scale(${focused ? 1 : 0.9})`,
+          opacity: entered ? 1 : 0,
+          transform: `translateX(-50%) translateY(${focused ? layout.focusTop : layout.restTop + (entered ? 0 : 48)}px) scale(${focused ? 1 : 0.9})`,
         }}
       >
         {/* Click the resting laptop to lift it; the site becomes usable once focused. */}

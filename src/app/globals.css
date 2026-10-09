@@ -311,7 +311,13 @@ body {
 .work-laptop {
   pointer-events: auto;
   transform-origin: top center;
-  transition: transform 850ms cubic-bezier(0.32, 0.72, 0, 1);
+  transition:
+    transform 850ms cubic-bezier(0.32, 0.72, 0, 1),
+    opacity 600ms var(--ease);
+}
+/* Before the first measurement, don't animate the jump into place. */
+.work-laptop[data-entered="false"] {
+  transition: none;
 }
 .work-chrome {
   opacity: 0;

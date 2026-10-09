@@ -4,6 +4,7 @@ import { MapIcon, SimIcon, TrackerIcon } from "@/components/LineIcons";
 import Reveal from "@/components/Reveal";
 import WorkTabs from "@/components/WorkTabs";
 import SocialLinks from "@/components/SocialLinks";
+import PlayableName from "@/components/PlayableName";
 
 const summary: DecodePart[] = [
   "I make tech policy easier to understand through ",
@@ -23,7 +24,7 @@ export default function Home() {
       </Reveal>
 
       <Reveal delay={60} className="intro-fade mt-16 md:mt-20">
-        <h1 className="font-display text-[20px] leading-[28px] font-normal transition-colors duration-300 ease-[var(--ease)] hover:text-rose">Isabelle Reksopuro</h1>
+        <PlayableName />
         <p className="mt-3 font-display text-[19px] leading-[30px] font-normal">
           <DecodeText parts={summary} />
         </p>
