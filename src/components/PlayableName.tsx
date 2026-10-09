@@ -22,7 +22,7 @@ const SONGS: Song[] = [
     title: "DNA",
     notes: [A4, C5, A4, F5, A5, A4, C5, D5, D5, D5, D5, D5, D5, C5, A4],
     steps: [0, 1, 2, 4, 5, 7, 8, 10, 11, 13, 14, 16, 17, 19, 20],
-    stepMs: 130,
+    stepMs: 180,
   },
   {
     // Red Velvet "Feel My Rhythm", "Feel my rhythm, come with me" (keylimba cover):
@@ -30,7 +30,7 @@ const SONGS: Song[] = [
     title: "Feel My Rhythm",
     notes: [C5, C5, C5, C5, A4, C5, C5, B4, E5],
     steps: [0, 1, 3, 5, 7, 9, 11, 13, 14],
-    stepMs: 120,
+    stepMs: 170,
   },
   {
     // NewJeans "Hype Boy" synth hook: E E' C' A E D' B G | G D' B G A C' A E
