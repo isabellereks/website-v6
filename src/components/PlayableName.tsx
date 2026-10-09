@@ -6,40 +6,60 @@ const NAME = "Isabelle Reksopuro";
 
 interface Song {
   title: string;
-  notes: number[];
-  // Each note's position in sixteenth-note steps, for the click playback rhythm.
-  steps: number[];
+  // Kalimba number tab: 1–7 = C D E F G A B, each * raises an octave,
+  // (chords) play their highest note, and | marks a phrase break (a short pause).
+  tab: string;
   stepMs: number;
 }
 
-const E4 = 329.63, G4 = 392.0, A4 = 440.0, B4 = 493.88;
-const C5 = 523.25, D5 = 587.33, E5 = 659.25, F5 = 698.46, A5 = 880.0;
-
-// Melodies transcribed from fan kalimba/piano letter-note tabs.
+// Tabs from KalimbaTabs.net and kalimba covers.
 const SONGS: Song[] = [
   {
-    // BTS "DNA" (kalimba tab): A C A · F A · A C · D D · D D · D D · C A
+    // BTS "DNA", from the Simple Kalimba tab: A C A · F A · A C · D D · D D · D D · C A
     title: "DNA",
-    notes: [A4, C5, A4, F5, A5, A4, C5, D5, D5, D5, D5, D5, D5, C5, A4],
-    steps: [0, 1, 2, 4, 5, 7, 8, 10, 11, 13, 14, 16, 17, 19, 20],
-    stepMs: 180,
+    tab: "6 1* 6 4* 6* | 6 1* | 2* 2* 2* 2* 2* 2* | 1* 6",
+    stepMs: 200,
   },
   {
-    // Red Velvet "Feel My Rhythm", "Feel my rhythm, come with me" (keylimba cover):
-    // 1 1 · 1 · 1 · 6 · 1 · 1 · 7 3  →  C C C C A C C B E
+    // Red Velvet "Feel My Rhythm", from the chorus ("Feel my rhythm, come with me") on.
     title: "Feel My Rhythm",
-    notes: [C5, C5, C5, C5, A4, C5, C5, B4, E5],
-    steps: [0, 1, 3, 5, 7, 9, 11, 13, 14],
-    stepMs: 170,
+    tab: `(3*1) 3* 3* 3* 4* 3* (3*3) | 3* 2* 3* 2* 3* 2* (4*4) 3* 3* |
+      5* 1** (1*1**) 7* 7* 6* (6*6) 5* (1*3*5*) | 1* 1* 2* 3* 3* 3* 5* (1*1**) |
+      (13*) 3 5* (55*) 4* 3* 2* (11*) 3 5 | 6* (7*5) 7 6* (5*5) |
+      5* 3* (5*3) 5 7 6* 5* 4* (3*3) 5 7 | 5* 4* 3* (2*2) 4 6 | 3* (2*2) 2*`,
+    stepMs: 210,
   },
   {
-    // NewJeans "Hype Boy" synth hook: E E' C' A E D' B G | G D' B G A C' A E
+    // NewJeans "Hype Boy": synth hook, verse, then chorus.
     title: "Hype Boy",
-    notes: [E4, E5, C5, A4, E4, D5, B4, G4, G4, D5, B4, G4, A4, C5, A4, E4],
-    steps: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15],
-    stepMs: 150,
+    tab: `3 3* 1* 6 3 2* 7 5 | 5 2* 7 5 6 1* 6 3 | 3 3* 1* 6 3 2* 7 5 | 5 2* 7 5 6 1* 6 3 |
+      3 2 5 5 6 | 3 2 5 5 6 | 3 2 5 5 5 2* | 5 5 5 2* 1* 6 |
+      1* 1* 1* 7 7 7 7 7 6 | 6 6 6 6 5 6 | 1* 1* 1* 7 7 7 7 7 6 | 6 6 6 6 5 6 |
+      1* 3* 3* 2* 1* | 1* 7 1* 2* 5 | 1* 3* 3* 2* 1* | 1* 7 1* 2* 5 |
+      1* 2* 3* 2* 1* 1* | 7 1* 2* 2* 1* 5* 3*`,
+    stepMs: 190,
   },
 ];
+
+const SCALE = [0, 2, 4, 5, 7, 9, 11]; // semitones of 1–7 above C
+const C4 = 261.63;
+
+// Turn a tab into notes, each with its start time in steps (phrase breaks add a rest).
+function parseTab(tab: string) {
+  const notes: { freq: number; step: number }[] = [];
+  let step = 0;
+  for (const token of tab.match(/\([^)]*\)|\||\d\**/g) ?? []) {
+    if (token === "|") {
+      step += 2;
+      continue;
+    }
+    // For chords, the highest note carries the melody.
+    const freqs = (token.match(/\d\**/g) ?? []).map((n) => C4 * 2 ** ((SCALE[Number(n[0]) - 1] + 12 * (n.length - 1)) / 12));
+    notes.push({ freq: Math.max(...freqs), step });
+    step += 1;
+  }
+  return notes;
+}
 
 // Rotate to the next song on every visit (falls back to random without storage).
 // Cached so it advances once per page load, even if effects run twice in dev.
@@ -64,11 +84,16 @@ function rotate() {
 // click or keypress, so audio unlocks then.
 export default function PlayableName() {
   const audioRef = useRef<AudioContext | null>(null);
-  const songRef = useRef<Song>(SONGS[0]);
+  const songRef = useRef(parseTab(SONGS[0].tab));
+  const songMsRef = useRef(SONGS[0].stepMs);
+  const nextNoteRef = useRef(0);
+  const playbackRef = useRef<ReturnType<typeof setTimeout>[]>([]);
   const lettersRef = useRef<(HTMLSpanElement | null)[]>([]);
 
   useEffect(() => {
-    songRef.current = pickSong();
+    const song = pickSong();
+    songRef.current = parseTab(song.tab);
+    songMsRef.current = song.stepMs;
     const unlock = () => {
       if (!audioRef.current) audioRef.current = new AudioContext();
       audioRef.current.resume();
@@ -122,24 +147,30 @@ export default function PlayableName() {
     }
   };
 
-  // Letters are numbered skipping the space, so the hook runs straight across the name.
-  const noteIndex = (i: number) => NAME.slice(0, i).replace(/ /g, "").length % songRef.current.notes.length;
-
+  // Each hover plays the next note, so sweeping across the name plays the song.
   const play = (i: number) => {
     hop(i);
-    note(songRef.current.notes[noteIndex(i)]);
+    const notes = songRef.current;
+    note(notes[nextNoteRef.current % notes.length].freq);
+    nextNoteRef.current += 1;
   };
 
-  const playHook = () => {
-    // The click itself unlocks audio (the window listener runs first).
+  // Click plays the whole song (click again to stop), letters hopping along.
+  const playSong = () => {
+    if (playbackRef.current.length) {
+      playbackRef.current.forEach(clearTimeout);
+      playbackRef.current = [];
+      return;
+    }
     const letters = NAME.split("").map((ch, i) => (ch === " " ? -1 : i)).filter((i) => i >= 0);
-    const song = songRef.current;
-    song.notes.forEach((freq, k) => {
+    const notes = songRef.current;
+    playbackRef.current = notes.map((n, k) =>
       setTimeout(() => {
         hop(letters[k % letters.length]);
-        note(freq);
-      }, song.steps[k] * song.stepMs);
-    });
+        note(n.freq);
+        if (k === notes.length - 1) playbackRef.current = [];
+      }, n.step * songMsRef.current),
+    );
   };
 
   return (
@@ -149,11 +180,11 @@ export default function PlayableName() {
         tabIndex={0}
         aria-label={`Play ${NAME}`}
         className="inline-flex cursor-pointer select-none"
-        onClick={playHook}
+        onClick={playSong}
         onKeyDown={(e) => {
           if (e.key === "Enter" || e.key === " ") {
             e.preventDefault();
-            playHook();
+            playSong();
           }
         }}
       >
