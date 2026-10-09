@@ -39,21 +39,6 @@ export default function Home() {
           safety and policy that protects everyday people.
         </p>
         <p>
-          Right now I’m campaigning for reproductive justice with{" "}
-          <a className="link" href="https://www.advocatesforyouth.org/">
-            Advocates for Youth
-          </a>
-          , leading student ambassadors for{" "}
-          <a className="link" href="https://aaylc.org">
-            AAYLC
-          </a>
-          , and running the{" "}
-          <a className="link" href="https://www.instagram.com/seattlejunkjournalclub/">
-            Seattle Junk Journal Club
-          </a>
-          .
-        </p>
-        <p>
           Say hi on{" "}
           {links.map((l, i) => (
             <span key={l.label}>
