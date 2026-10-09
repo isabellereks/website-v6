@@ -41,7 +41,17 @@ export default function WorkStage() {
   const [focused, setFocused] = useState(false);
   const [index, setIndex] = useState(0);
   const [detailsOpen, setDetailsOpen] = useState(false);
-  const [layout, setLayout] = useState({ restTop: 0, focusTop: 0, laptopHeight: 0, scrollY: 0, vh: 0 });
+  const [layout, setLayout] = useState({ restTop: 0, laptopHeight: 0, scrollY: 0, vh: 0 });
+  // Height of the open "About this project" text, so the focused view can make room for it.
+  const detailsRef = useRef<HTMLDivElement>(null);
+  const [detailsHeight, setDetailsHeight] = useState(0);
+  useEffect(() => {
+    const el = detailsRef.current;
+    if (!el) return;
+    const observer = new ResizeObserver(() => setDetailsHeight(el.scrollHeight));
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, [mounted]);
 
   // Scroll gestures that began before the stage appeared (or before the last
   // open/close) are trackpad momentum, not intent, so they're ignored.
@@ -62,7 +72,6 @@ export default function WorkStage() {
       const h = laptop.offsetHeight;
       setLayout({
         restTop: anchor.getBoundingClientRect().top + window.scrollY,
-        focusTop: Math.max(LABEL_SPACE + 16, (vh - h - CONTROLS_SPACE + LABEL_SPACE) / 2),
         laptopHeight: h,
         scrollY: window.scrollY,
         vh,
@@ -154,7 +163,14 @@ export default function WorkStage() {
   const go = (next: number) => setIndex((next + projects.length) % projects.length);
 
   // Focused position is the window's center, in page coordinates.
-  const focusY = layout.scrollY + layout.focusTop;
+  // Fit label + laptop + controls (+ details when open) in the window: center
+  // the group, and shrink the laptop if the window is too short for all of it.
+  const extra = detailsOpen ? detailsHeight + 12 : 0;
+  const room = layout.vh - LABEL_SPACE - CONTROLS_SPACE - extra - 24;
+  const focusScale = layout.laptopHeight ? Math.min(1, Math.max(0.5, room / layout.laptopHeight)) : 1;
+  const visibleHeight = layout.laptopHeight * focusScale;
+  const focusTop = Math.max(LABEL_SPACE + 12, (layout.vh - visibleHeight - CONTROLS_SPACE - extra + LABEL_SPACE) / 2);
+  const focusY = layout.scrollY + focusTop;
   // Room for the resting laptop to peek below the tabs, clipped like liam.cv;
   // when focused, cover the whole window.
   const restHeight = Math.max(layout.vh, layout.restTop + PEEK);
@@ -187,7 +203,7 @@ export default function WorkStage() {
         style={{
           top: 0,
           opacity: entered ? 1 : 0,
-          transform: `translateX(-50%) translateY(${focused ? focusY : layout.restTop + (entered ? 0 : 48)}px) scale(${focused ? 1 : 0.9})`,
+          transform: `translateX(-50%) translateY(${focused ? focusY : layout.restTop + (entered ? 0 : 48)}px) scale(${focused ? focusScale : 0.9})`,
         }}
       >
         {/* Click the resting laptop to lift it; the site becomes usable once focused. */}
@@ -217,7 +233,7 @@ export default function WorkStage() {
       {/* Slider and details below the laptop */}
       <div
         className="work-chrome absolute left-1/2 flex w-[min(560px,calc(100vw-32px))] -translate-x-1/2 flex-col items-center"
-        style={{ top: focusY + layout.laptopHeight + 4 }}
+        style={{ top: focusY + visibleHeight + 4 }}
       >
         <div className="flex items-center gap-2">
           <button
@@ -283,7 +299,7 @@ export default function WorkStage() {
           style={{ gridTemplateRows: detailsOpen ? "1fr" : "0fr", opacity: detailsOpen ? 1 : 0 }}
           inert={!detailsOpen}
         >
-          <div className="overflow-hidden">
+          <div ref={detailsRef} className="overflow-hidden">
             <div className="pt-3 text-center text-[15px] leading-[24px] text-muted">
               <p className="text-ink">{project.tagline}</p>
               <p className="mt-1">{project.details.join(" ")}</p>
