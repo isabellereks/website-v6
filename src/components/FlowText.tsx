@@ -9,22 +9,43 @@ import {
   type PreparedTextWithSegments,
 } from "@chenglou/pretext";
 
-interface Paragraph {
+// A paragraph is a list of runs so links survive pretext's plain-text layout.
+export interface Run {
   text: string;
+  href?: string;
+}
+
+export interface Paragraph {
+  runs: Run[];
   muted?: boolean;
 }
 
 interface Line {
   x: number;
   y: number;
-  text: string;
+  runs: Run[];
   muted?: boolean;
+}
+
+const fullText = (para: Paragraph) => para.runs.map((r) => r.text).join("");
+
+// The runs covering characters [start, end) of a paragraph.
+function sliceRuns(runs: Run[], start: number, end: number) {
+  const out: Run[] = [];
+  let pos = 0;
+  for (const run of runs) {
+    const a = Math.max(start, pos);
+    const b = Math.min(end, pos + run.text.length);
+    if (a < b) out.push({ text: run.text.slice(a - pos, b - pos), href: run.href });
+    pos += run.text.length;
+  }
+  return out;
 }
 
 const BOWL = 104; // drawing size in px
 const RADIUS = BOWL / 2 + 10; // text keeps this far from the bowl's center
 const MIN_SLOT = 56; // don't squeeze words into slivers
-const PARAGRAPH_GAP = 10;
+const PARAGRAPH_GAP = 8;
 
 // Free horizontal slots for one line, after cutting out the circle around the bowl.
 function slotsFor(top: number, bottom: number, width: number, cx: number, cy: number) {
@@ -39,7 +60,7 @@ function slotsFor(top: number, bottom: number, width: number, cx: number, cy: nu
 }
 
 function layoutAround(
-  prepared: { p: PreparedTextWithSegments; muted?: boolean }[],
+  prepared: { p: PreparedTextWithSegments; para: Paragraph }[],
   width: number,
   lineHeight: number,
   bowl: { x: number; y: number },
@@ -48,7 +69,9 @@ function layoutAround(
   const cx = bowl.x + BOWL / 2;
   const cy = bowl.y + BOWL / 2;
   let y = 0;
-  for (const { p, muted } of prepared) {
+  for (const { p, para } of prepared) {
+    const text = fullText(para);
+    let offset = 0; // where the next line starts in `text`
     let cursor: LayoutCursor = { segmentIndex: 0, graphemeIndex: 0 };
     let finished = false;
     while (!finished) {
@@ -59,7 +82,12 @@ function layoutAround(
           finished = true;
           break;
         }
-        lines.push({ x: left, y, text: materializeLineRange(p, range).text.trimStart(), muted });
+        // Find the line in the source text so we can carry links over to it.
+        const lineText = materializeLineRange(p, range).text.trim();
+        const start = text.indexOf(lineText, offset);
+        const from = start === -1 ? offset : start;
+        offset = from + lineText.length;
+        lines.push({ x: left, y, runs: sliceRuns(para.runs, from, offset), muted: para.muted });
         cursor = range.end;
         placed = true;
       }
@@ -158,7 +186,7 @@ export default function FlowText({ paragraphs }: { paragraphs: Paragraph[] }) {
 
   // Pretext's line breaking can't run until we know the real font and width.
   const prepared = useMemo(
-    () => (font ? paragraphs.map((para) => ({ p: prepareWithSegments(para.text, font.font), muted: para.muted })) : null),
+    () => (font ? paragraphs.map((para) => ({ p: prepareWithSegments(fullText(para), font.font), para })) : null),
     [font, paragraphs],
   );
 
@@ -195,7 +223,15 @@ export default function FlowText({ paragraphs }: { paragraphs: Paragraph[] }) {
               className={`absolute whitespace-pre ${line.muted ? "text-muted" : ""}`}
               style={{ left: line.x, top: line.y }}
             >
-              {line.text}
+              {line.runs.map((run, j) =>
+                run.href ? (
+                  <a key={j} className="link" href={run.href}>
+                    {run.text}
+                  </a>
+                ) : (
+                  run.text
+                ),
+              )}
             </span>
           ))}
           <div
@@ -208,17 +244,25 @@ export default function FlowText({ paragraphs }: { paragraphs: Paragraph[] }) {
             title="Drag the matcha"
           >
             <MatchaBowl />
-            <span className="pointer-events-none absolute -bottom-3 left-1/2 -translate-x-1/2 font-script text-[15px] whitespace-nowrap text-muted">
+            <span className="pointer-events-none absolute -bottom-2 left-1/2 -translate-x-1/2 text-[11px] whitespace-nowrap text-muted/70">
               drag me
             </span>
           </div>
         </>
       ) : (
         // Before pretext runs (and without JS), show plain paragraphs.
-        <div className="space-y-3.5">
-          {paragraphs.map((para) => (
-            <p key={para.text} className={para.muted ? "text-muted" : undefined}>
-              {para.text}
+        <div className="space-y-2">
+          {paragraphs.map((para, i) => (
+            <p key={i} className={para.muted ? "text-muted" : undefined}>
+              {para.runs.map((run, j) =>
+                run.href ? (
+                  <a key={j} className="link" href={run.href}>
+                    {run.text}
+                  </a>
+                ) : (
+                  run.text
+                ),
+              )}
             </p>
           ))}
         </div>

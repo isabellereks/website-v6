@@ -1,0 +1,446 @@
+/* 3D bookshelf, ported from the current isabellereks.com (Stripe Press style). */
+.bookshelf-section {
+  width: 100%;
+}
+.shelf-scene {
+  position: relative;
+  width: 100%;
+  margin-inline: auto;
+  padding-top: 12px;
+}
+.book-slot,
+.shelf-board,
+.shelf-books::after {
+  transition: opacity 240ms ease;
+}
+.shelf-scene[data-previewing='true'] .book-slot:not([data-active='true']),
+.shelf-scene[data-previewing='true'] .shelf-board,
+.shelf-scene[data-previewing='true'] .shelf-books::after {
+  opacity: 0.35;
+}
+.shelf-books {
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  gap: 4px;
+  height: 216px;
+  padding-inline: 12px;
+  isolation: isolate;
+}
+.book-slot {
+  --cover-width: calc(var(--book-height) * var(--cover-ratio));
+  --hover-shift: -8px;
+  position: relative;
+  display: block;
+  flex: 0 0 calc(var(--book-width) + 4px);
+  height: var(--book-height);
+  perspective: 1000px;
+  text-align: left;
+  text-decoration: none;
+  z-index: 1;
+  outline-offset: 3px;
+  transition: opacity 240ms ease;
+}
+.book-model {
+  pointer-events: none;
+  display: block;
+  position: absolute;
+  bottom: 0;
+  left: 2px;
+  width: var(--book-width);
+  height: 100%;
+  transform-style: preserve-3d;
+  transform-origin: center bottom;
+  transform: rotateY(0deg);
+  transition: transform 480ms cubic-bezier(0.2, 0.75, 0.22, 1);
+}
+.book-slot:last-child {
+  margin-left: 19px;
+}
+.book-slot:last-child .book-model {
+  transform: rotateZ(-7deg);
+}
+.book-slot[data-raised='true'] {
+  z-index: 9;
+}
+.book-slot[data-active='true'] {
+  z-index: 10;
+}
+.book-slot[data-active='true'] .book-model {
+  transform: translate3d(var(--hover-shift), -12px, 45px);
+}
+.book-slot:nth-last-of-type(-n + 2) {
+  --hover-shift: -48px;
+}
+.book-slot:focus-visible {
+  outline: none;
+}
+.book-slot:focus-visible:not([data-active='true']) .book-spine,
+.book-slot:focus-visible[data-active='true'] .book-cover {
+  outline: 2px solid var(--color-ink);
+  outline-offset: 4px;
+}
+.book-spine {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  background-color: var(--book-color);
+  /* Paper grain, rounded-spine lighting, and darker head and tail where the boards end. */
+  background-image:
+    linear-gradient(180deg, #0003 0, #0000 3px, #0000 calc(100% - 4px), #0003 100%),
+    linear-gradient(90deg, #0004 0%, #0001 6%, #fff3 18%, #fff1 30%, #0000 55%, #0001 80%, #0003 94%, #0006 100%),
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='80' height='80'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 .09 0'/%3E%3C/filter%3E%3Crect width='80' height='80' filter='url(%23n)'/%3E%3C/svg%3E");
+  border-radius: 3px 3px 2px 2px / 2px 2px 1px 1px;
+  box-shadow:
+    inset 0 1px 0 #fff4,
+    inset 1px 0 0 #fff2,
+    inset -1px 0 0 #0002,
+    -1px 0 0 #0000000d,
+    -3px 3px 6px #2a1f1026;
+  color: var(--book-ink);
+  backface-visibility: hidden;
+}
+.book-spine[data-photo='true'] {
+  background-image: none;
+}
+.spine-photo {
+  object-fit: cover;
+}
+.book-spine[data-photo='true']::after {
+  /* Keep the same rounded-spine lighting over photos so they sit on the shelf. */
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(90deg, #0003 0%, #fff1 18%, #0000 55%, #0003 100%);
+}
+.spine-title {
+  position: absolute;
+  top: 16px;
+  left: 50%;
+  transform: translateX(-50%);
+  writing-mode: vertical-rl;
+  text-orientation: mixed;
+  font-family: Georgia, serif;
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  line-height: 1.15;
+  white-space: nowrap;
+  text-shadow: 0 0.5px 0 #0002;
+}
+.spine-author {
+  position: absolute;
+  bottom: 12px;
+  left: 50%;
+  transform: translateX(-50%);
+  writing-mode: vertical-rl;
+  font-size: 9px;
+  font-weight: 500;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  opacity: 0.75;
+}
+.book-cover {
+  outline: 2px solid var(--color-ink);
+  outline-offset: 4px;
+}
+.book-spine {
+  position: absolute;
+  inset: 0;
+  background-color: var(--book-color);
+  background-image:
+    linear-gradient(90deg, #0002, #fff2 8%, transparent 19%, transparent 78%, #0002 96%, #0004),
+    repeating-linear-gradient(0deg, #fff0 0 2px, #ffffff07 2px 3px);
+  border-radius: 2px 2px 1px 1px;
+  box-shadow:
+    inset 0 1px 1px #fff5,
+    inset 0 -2px 1px #0002,
+    -2px 2px 4px #30241320;
+  color: var(--book-ink);
+  backface-visibility: hidden;
+}
+.spine-title {
+  position: absolute;
+  top: 13px;
+  bottom: 30px;
+  left: 50%;
+  transform: translateX(-50%);
+  writing-mode: vertical-rl;
+  text-orientation: mixed;
+  font-family: Georgia, serif;
+  font-size: 14px;
+  font-weight: 600;
+  letter-spacing: 0.012em;
+  line-height: 1.15;
+}
+.book-cover {
+  position: absolute;
+  top: 0;
+  left: var(--book-width);
+  width: var(--cover-width);
+  height: 100%;
+  background: var(--book-color);
+  color: var(--book-ink);
+  border-radius: 0 3px 3px 0;
+  transform-origin: left center;
+  transform: rotateY(90deg);
+  backface-visibility: hidden;
+  box-shadow:
+    inset -1px 0 0 #0004,
+    4px 5px 9px #201b1429;
+}
+.book-jacket::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: linear-gradient(
+    90deg,
+    #0004,
+    #fff2 3%,
+    #0001 6%,
+    transparent 12%,
+    transparent 95%,
+    #0002
+  );
+  pointer-events: none;
+}
+.book-cover img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  border-radius: inherit;
+}
+.cover-fallback {
+  display: flex;
+  height: 100%;
+  padding: 20px 12px;
+  justify-content: space-between;
+  flex-direction: column;
+  font-family: Georgia, serif;
+  line-height: 1.2;
+}
+.cover-fallback strong {
+  font-size: 21px;
+}
+.cover-fallback span {
+  font-size: 12px;
+}
+.book-pages {
+  position: absolute;
+  top: 2px;
+  left: 1px;
+  width: calc(var(--book-width) - 2px);
+  height: calc(var(--cover-width) - 2px);
+  transform-origin: top center;
+  transform: rotateX(-90deg);
+  background: repeating-linear-gradient(90deg, #e6e1d4 0 1px, #faf7ec 1px 3px);
+  border: 1px solid #c9c0ad;
+}
+.shelf-board,
+.shelf-books::after {
+  position: relative;
+  height: 13px;
+  margin-inline: 1px;
+  border-radius: 1px 1px 3px 3px;
+  background: linear-gradient(
+    #ebe3d4 0,
+    #f2ebdd 3px,
+    #d5c8ae 4px,
+    #dbceb7 5px,
+    #e7dcc8 90%,
+    #cebea0
+  );
+  box-shadow:
+    0 1px 2px #6451341f,
+    0 7px 9px -4px #75624726,
+    0 19px 22px -14px #51493830;
+}
+.shelf-board::before {
+  content: '';
+  position: absolute;
+  height: 7px;
+  top: -7px;
+  left: 0;
+  right: 0;
+  background: linear-gradient(#f4eee3, #e5dac7);
+  clip-path: polygon(2% 0, 98% 0, 100% 100%, 0 100%);
+  z-index: 0;
+}
+.book-caption {
+  min-height: 67px;
+  padding-top: 12px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 2px;
+  font-size: 13px;
+  letter-spacing: -0.012em;
+  color: var(--color-muted);
+}
+.caption-title {
+  color: var(--color-ink);
+  font-size: 14px;
+}
+
+@media (max-width: 430px) {
+  .shelf-books {
+    height: 208px;
+    gap: 0;
+    padding-inline: 12px;
+  }
+  .book-slot {
+    --cover-width: calc((var(--book-height) - 12px) * var(--cover-ratio));
+    flex-basis: calc(var(--book-width) - 2px);
+    height: calc(var(--book-height) - 12px);
+  }
+  .book-model {
+    width: calc(var(--book-width) - 6px);
+  }
+  .book-cover {
+    left: calc(var(--book-width) - 6px);
+  }
+  .book-pages {
+    width: calc(var(--book-width) - 8px);
+  }
+  .book-slot:last-child {
+    margin-left: 16px;
+  }
+  }
+
+.book-cover[data-project='true'] {
+  background-image: repeating-linear-gradient(0deg, transparent 0 2px, #ffffff0a 2px 3px);
+}
+.book-cover[data-project='true'] .cover-fallback {
+  padding: 19px 14px 15px;
+}
+.book-cover[data-project='true'] strong {
+  font-size: 23px;
+  font-weight: 400;
+}
+.book-cover[data-project='true'] .cover-fallback > span {
+  border-top: 1px solid currentColor;
+  padding-top: 9px;
+  font-size: 11px;
+  line-height: 1.4;
+}
+
+.book-cover,
+.book-pages {
+  visibility: hidden;
+  transition: visibility 0s 480ms;
+}
+.book-slot[data-active='true'] .book-cover,
+.book-slot[data-active='true'] .book-pages {
+  visibility: visible;
+  transition-delay: 0s;
+}
+.book-slot[data-active='true'] .book-cover {
+  pointer-events: auto;
+}
+.book-cover {
+  transform-style: preserve-3d;
+}
+.book-jacket {
+  display: block;
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: var(--book-color);
+  transform-origin: left center;
+  transform-style: preserve-3d;
+}
+.book-inside {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  position: absolute;
+  inset: 1px 2px 1px 0;
+  padding: 19px 13px;
+  background: #f4efdf;
+  color: #514c40;
+  font-family: Georgia, serif;
+  line-height: 1.4;
+  box-shadow: inset 4px 0 9px #4b3d2220;
+}
+.book-inside strong {
+  font-size: 19px;
+  font-weight: 400;
+}
+.book-inside > span {
+  font-size: 11px;
+}
+.book-shape {
+  display: block;
+  position: absolute;
+  inset: 0;
+  transform-style: preserve-3d;
+  transform: rotateY(0);
+  transition: transform 360ms cubic-bezier(0.2, 0.75, 0.22, 1);
+}
+.book-slot[data-active='true'] .book-shape {
+  transform: rotateY(-64deg);
+  transition-delay: 80ms;
+}
+
+.book-slot {
+  --open-shift: -25px;
+}
+.book-slot:nth-last-of-type(-n + 2) {
+  --open-shift: -64px;
+}
+.book-jacket > .cover-fallback,
+.book-jacket > img {
+  backface-visibility: hidden;
+  transform: translateZ(1px);
+}
+.book-jacket::after {
+  backface-visibility: hidden;
+  transform: translateZ(2px);
+}
+.jacket-back {
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: linear-gradient(90deg, #ded6c3, #f3eddd 12%, #ece5d3);
+  transform: rotateY(180deg) translateZ(1px);
+  backface-visibility: hidden;
+}
+
+@media (max-width: 430px) {
+  .book-slot:first-child {
+    --open-shift: 12px;
+  }
+}
+
+.shelf-books {
+  position: relative;
+  z-index: 1;
+  flex: 0 0 auto;
+  padding-inline: 0;
+  gap: 2px;
+}
+.book-slot {
+  flex-basis: calc(var(--book-width) - 3px);
+}
+.book-model {
+  width: calc(var(--book-width) - 7px);
+}
+.book-cover {
+  left: calc(var(--book-width) - 7px);
+}
+.book-pages {
+  width: calc(var(--book-width) - 9px);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .bookshelf-section *,
+  .bookshelf-section *::before,
+  .bookshelf-section *::after {
+    transition: none !important;
+    animation: none !important;
+  }
+}

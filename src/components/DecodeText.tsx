@@ -5,7 +5,7 @@ import { Fragment, useEffect, useState } from "react";
 export type DecodePart =
   | string
   | { text: string; href: string }
-  | { icon: React.ReactNode; href: string; label: string };
+  | { icon: React.ReactNode; text: string; href: string; label: string };
 
 const GLYPHS = "abcdefghijklmnopqrstuvwxyz";
 const DURATION_MS = 900;
@@ -27,21 +27,22 @@ function scramble(text: string, seed: number) {
   return out;
 }
 
-const textOf = (part: DecodePart) =>
-  typeof part === "string" ? part : "text" in part ? part.text : "";
+const textOf = (part: DecodePart) => (typeof part === "string" ? part : part.text);
 
 function renderPart(part: DecodePart, shown: React.ReactNode, interactive: boolean) {
   if (typeof part === "string") return shown;
-  if ("text" in part) {
+  if ("icon" in part) {
+    // Icon + phrase as one link that picks up a grey border on hover.
     return (
-      <a className="link" href={part.href} tabIndex={interactive ? undefined : -1}>
+      <a className="chip" href={part.href} title={part.label} tabIndex={interactive ? undefined : -1}>
+        {part.icon}
         {shown}
       </a>
     );
   }
   return (
-    <a href={part.href} aria-label={part.label} tabIndex={interactive ? undefined : -1}>
-      {part.icon}
+    <a className="link" href={part.href} tabIndex={interactive ? undefined : -1}>
+      {shown}
     </a>
   );
 }

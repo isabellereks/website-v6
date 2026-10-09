@@ -6,13 +6,13 @@ import WorkTabs from "@/components/WorkTabs";
 import { links } from "@/data/links";
 
 const summary: DecodePart[] = [
-  "I make tech policy easier to understand through",
-  { icon: <TrackerIcon />, href: "https://trackpolicy.org", label: "Track Policy" },
-  "live trackers,",
-  { icon: <SimIcon />, href: "https://policysim.policy.cafe", label: "PolicySim" },
-  "simulations, and",
-  { icon: <MapIcon />, href: "https://corruption-map.vercel.app", label: "Corruption Map" },
-  "data maps.",
+  "I make tech policy easier to understand through ",
+  { icon: <TrackerIcon />, text: "live trackers", href: "https://trackpolicy.org", label: "Track Policy" },
+  ", ",
+  { icon: <SimIcon />, text: "simulations", href: "https://policysim.policy.cafe", label: "PolicySim" },
+  ", and ",
+  { icon: <MapIcon />, text: "data maps", href: "https://corruption-map.vercel.app", label: "Corruption Map" },
+  ".",
 ];
 
 export default function Home() {

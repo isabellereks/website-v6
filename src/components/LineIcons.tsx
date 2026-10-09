@@ -9,7 +9,7 @@ const iconProps = {
   strokeLinejoin: "round" as const,
   strokeLinecap: "round" as const,
   "aria-hidden": true,
-  className: "inline-block align-[-0.3em] mx-1 text-ink",
+  className: "inline-block align-[-0.3em] mr-1 text-ink",
 };
 
 // Stacked sheets: a tracker.

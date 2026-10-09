@@ -38,15 +38,15 @@
   --color-rule: #e8e8ed;
   --color-rose: #ad606e;
   --font-sans: var(--font-open-runde), -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
-  --font-serif: var(--font-instrument-serif), Georgia, serif;
   --font-display: "PP Neue Gstaad", var(--font-inter-tight), sans-serif;
-  --font-script: var(--font-signature), cursive;
 }
 
 :root {
   color-scheme: light;
   /* One easing for everything: a soft ease-out with no overshoot. */
   --ease: cubic-bezier(0.22, 1, 0.36, 1);
+  /* A real spring (damping 0.82, response 0.5s), ~1% overshoot like iOS. */
+  --spring: linear(0, 0.0196, 0.0697, 0.1397, 0.2211, 0.3077, 0.3947, 0.4788, 0.5578, 0.6301, 0.6951, 0.7525, 0.8024, 0.845, 0.881, 0.911, 0.9355, 0.9553, 0.971, 0.9832, 0.9924, 0.9993, 1.0042, 1.0075, 1.0096, 1.0107, 1.0111, 1.011, 1.0105, 1.0097, 1.0088, 1.0079, 1.0069, 1.006, 1.0051, 1.0043, 1);
 }
 
 html {
@@ -79,6 +79,26 @@ body {
 }
 .link:hover {
   text-decoration-color: var(--color-ink);
+}
+
+/* Inline icon + phrase links in the intro: a grey outline appears on hover. */
+.chip {
+  /* Padding is cancelled by equal negative margin so the outline never shifts the text. */
+  padding: 1px 5px 1px 4px;
+  margin: 0 -5px 0 -4px;
+  white-space: nowrap;
+  border: 1px solid transparent;
+  border-radius: 8px;
+  box-decoration-break: clone;
+  -webkit-box-decoration-break: clone;
+  transition:
+    border-color 200ms var(--ease),
+    background-color 200ms var(--ease);
+}
+.chip:hover,
+.chip:focus-visible {
+  border-color: #d2d2d7;
+  background-color: #fafafa;
 }
 
 :focus-visible {
@@ -132,18 +152,6 @@ body {
   }
 }
 
-.book {
-  transform-box: fill-box;
-  transform-origin: bottom center;
-  transition: transform 300ms var(--ease);
-}
-.book-link:hover .book,
-.book-link:focus-visible .book {
-  transform: translateY(-4px);
-}
-.book-link:focus-visible {
-  outline: none;
-}
 
 @media (prefers-reduced-motion: reduce) {
   html {
@@ -169,38 +177,73 @@ body {
     animation: none;
     stroke-dasharray: none;
   }
-  .book {
-    transition: none;
-  }
 }
 
-/* Dynamic island: a pill that springs open on hover. */
+/* Dynamic Island. The shape springs open; compact content fades out first,
+   then the card fades in once there's room, like iOS. */
 .island {
-  width: 132px;
-  height: 36px;
-  border-radius: 18px;
+  width: 190px;
+  height: 37px;
+  border-radius: 18.5px;
+  overflow: hidden;
+  box-shadow: 0 8px 24px -10px rgb(0 0 0 / 0.35);
   transition:
-    width 450ms var(--ease),
-    height 450ms var(--ease),
-    border-radius 450ms var(--ease);
+    width 600ms var(--spring),
+    height 600ms var(--spring),
+    border-radius 600ms var(--spring);
 }
 .island[data-open="true"] {
-  width: 340px;
-  height: 76px;
-  border-radius: 24px;
+  width: min(372px, calc(100vw - 24px));
+  height: 176px;
+  border-radius: 44px;
+}
+.island-compact {
+  transition: opacity 200ms var(--ease) 180ms;
+}
+.island[data-open="true"] .island-compact {
+  opacity: 0;
+  pointer-events: none;
+  transition-delay: 0ms;
+  transition-duration: 120ms;
+}
+.island-card {
+  opacity: 0;
+  transform: scale(0.94);
+  filter: blur(6px);
+  pointer-events: none;
+  transition:
+    opacity 140ms var(--ease),
+    transform 200ms var(--ease),
+    filter 140ms var(--ease);
+}
+.island[data-open="true"] .island-card {
+  opacity: 1;
+  transform: none;
+  filter: none;
+  pointer-events: auto;
+  transition:
+    opacity 280ms var(--ease) 140ms,
+    transform 420ms var(--ease) 100ms,
+    filter 280ms var(--ease) 140ms;
 }
 .island-bar {
   height: 3px;
-  animation: island-bar 900ms ease-in-out infinite alternate;
+  animation: island-bar 800ms ease-in-out infinite alternate;
 }
 @keyframes island-bar {
   0% { height: 3px; }
-  50% { height: 12px; }
-  100% { height: 6px; }
+  60% { height: var(--bar-max, 12px); }
+  100% { height: 5px; }
 }
 @media (prefers-reduced-motion: reduce) {
-  .island { transition: none; }
-  .island-bar { animation: none; }
+  .island,
+  .island-compact,
+  .island-card {
+    transition: none;
+  }
+  .island-bar {
+    animation: none;
+  }
 }
 
 /* Tab panels crossfade in. */

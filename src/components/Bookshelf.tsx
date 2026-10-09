@@ -1,157 +1,225 @@
 "use client";
 
-import { useState } from "react";
-import { books } from "@/data/books";
-import { useInView } from "./useInView";
+import { useEffect, useRef, useState, type CSSProperties, type MouseEvent } from "react";
+import Image from "next/image";
+import { books, type Book } from "@/data/books";
+import "./bookshelf.css";
 
-const BASE = 250;
-const SHELF_LEFT = 20;
-const SHELF_RIGHT = 740;
-const BOOKS_LEFT = 168;
-const GAP = 4;
-
-// Each stroke gets pathLength=1 so the CSS draw-in works on any shape, and a
-// delay from its starting x so the drawing sweeps across the shelf.
-const stroke = (d: string, className?: string) => (
-  <path
-    key={d}
-    d={d}
-    pathLength={1}
-    className={className}
-    style={{ "--i": Math.round(parseFloat(d.slice(1)) / 20) } as React.CSSProperties}
-  />
-);
-
-const placed = books.reduce<{ book: (typeof books)[number]; left: number }[]>((acc, book) => {
-  const prev = acc.at(-1);
-  const left = prev ? prev.left + prev.book.width + GAP : BOOKS_LEFT;
-  return [...acc, { book, left }];
-}, []);
-const lastBook = placed.at(-1)!;
-const BOOKS_RIGHT = lastBook.left + lastBook.book.width;
-
-function plant() {
-  return (
-    <g>
-      {stroke("M76 212 H136 L130 250 H82 Z")}
-      {stroke("M74 206 H138 V212 H74 Z")}
-      {stroke("M106 206 C104 180 96 160 84 138")}
-      {stroke("M106 206 C108 176 118 156 132 140")}
-      {stroke("M106 206 C106 170 106 140 108 110")}
-      {stroke("M84 138 C70 134 64 120 70 108 C82 112 90 124 84 138 Z")}
-      {stroke("M132 140 C146 136 152 122 146 110 C134 114 126 126 132 140 Z")}
-      {stroke("M108 110 C98 102 98 86 108 76 C118 86 118 102 108 110 Z")}
-      {stroke("M96 168 C86 160 76 162 70 170 C80 176 90 176 96 168 Z")}
-    </g>
-  );
+interface BookStyle extends CSSProperties {
+  "--book-color": string;
+  "--book-ink": string;
+  "--book-height": string;
+  "--book-width": string;
+  "--cover-ratio": number;
 }
 
-function stackAndCup(x: number) {
-  return (
-    <g>
-      {stroke(`M${x} ${BASE} V${BASE - 14} H${x + 96} V${BASE} Z`)}
-      {stroke(`M${x + 6} ${BASE - 14} V${BASE - 26} H${x + 88} V${BASE - 14}`)}
-      {stroke(`M${x + 6} ${BASE - 8} H${x + 96}`)}
-      {stroke(`M${x + 28} ${BASE - 26} H${x + 70} L${x + 65} ${BASE - 58} H${x + 33} Z`)}
-      {stroke(`M${x + 68} ${BASE - 50} C${x + 82} ${BASE - 50} ${x + 82} ${BASE - 34} ${x + 66} ${BASE - 34}`)}
-      {stroke(`M${x + 34} ${BASE - 52} H${x + 64}`)}
-      {stroke(`M${x + 42} ${BASE - 66} C${x + 36} ${BASE - 76} ${x + 48} ${BASE - 84} ${x + 42} ${BASE - 96}`, "steam")}
-      {stroke(`M${x + 54} ${BASE - 66} C${x + 48} ${BASE - 78} ${x + 60} ${BASE - 86} ${x + 54} ${BASE - 102}`, "steam")}
-    </g>
-  );
+const EASE = "cubic-bezier(.2,.75,.22,1)";
+
+// Fit title and author along the spine. Long titles shrink like a real spine;
+// if the author won't fit too, leave it off (plenty of narrow spines do).
+function spineLayout(book: Book) {
+  const author = book.author.split(" ").at(-1) ?? "";
+  const titleSize = (room: number) => Math.min(13, room / (book.title.length * 0.56));
+  const withAuthor = titleSize(book.height - 28 - author.length * 10.5 - 14);
+  return withAuthor >= 9.5
+    ? { titleSize: withAuthor, author }
+    : { titleSize: Math.min(13, titleSize(book.height - 40)), author: null };
 }
 
-function shelf() {
-  return (
-    <g>
-      {stroke(`M${SHELF_LEFT} ${BASE} H${SHELF_RIGHT}`)}
-      {stroke(`M${SHELF_LEFT} ${BASE + 9} H${SHELF_RIGHT}`)}
-      {stroke(`M${SHELF_LEFT} ${BASE} V${BASE + 9}`)}
-      {stroke(`M${SHELF_RIGHT} ${BASE} V${BASE + 9}`)}
-      {stroke(`M70 ${BASE + 9} V${BASE + 36} L100 ${BASE + 9}`)}
-      {stroke(`M690 ${BASE + 9} V${BASE + 36} L660 ${BASE + 9}`)}
-    </g>
-  );
-}
-
+// Stripe Press style shelf, ported from the current isabellereks.com: hovering a spine
+// pulls the book out and turns it to show the cover; clicking opens it.
 export default function Bookshelf() {
-  const ref = useInView<SVGSVGElement>(0.3);
-  const [activeId, setActiveId] = useState<string | null>(null);
-  const active = books.find((b) => b.id === activeId);
+  const [previewedId, setPreviewedId] = useState<string | null>(null);
+  const [openingId, setOpeningId] = useState<string | null>(null);
+  const [raisedIds, setRaisedIds] = useState<Set<string>>(() => new Set());
+  const animationsRef = useRef<Animation[]>([]);
+  const leaveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const previewBook = (id: string | null) => {
+    if (leaveTimerRef.current) clearTimeout(leaveTimerRef.current);
+    if (id) {
+      setRaisedIds((current) => (current.has(id) ? current : new Set(current).add(id)));
+      setPreviewedId(id);
+    } else {
+      leaveTimerRef.current = setTimeout(() => setPreviewedId(null), 100);
+    }
+  };
+
+  const activeId = openingId ?? previewedId;
+  const activeBook = books.find((book) => book.id === activeId);
+
+  useEffect(() => {
+    // Coming back with the browser's back button should show a closed shelf.
+    const reset = () => {
+      if (leaveTimerRef.current) clearTimeout(leaveTimerRef.current);
+      animationsRef.current.forEach((animation) => animation.cancel());
+      animationsRef.current = [];
+      setOpeningId(null);
+      setPreviewedId(null);
+      setRaisedIds(new Set());
+    };
+    window.addEventListener("pageshow", reset);
+    return () => {
+      window.removeEventListener("pageshow", reset);
+      if (leaveTimerRef.current) clearTimeout(leaveTimerRef.current);
+      animationsRef.current.forEach((animation) => animation.cancel());
+    };
+  }, []);
+
+  const openBook = async (event: MouseEvent<HTMLAnchorElement>, book: Book) => {
+    if (event.metaKey || event.ctrlKey || event.shiftKey || event.altKey || event.button !== 0) return;
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    event.preventDefault();
+    if (animationsRef.current.length) return;
+
+    const slot = event.currentTarget;
+    const model = slot.querySelector<HTMLElement>(".book-model");
+    const shape = slot.querySelector<HTMLElement>(".book-shape");
+    const jacket = slot.querySelector<HTMLElement>(".book-jacket");
+    if (!model || !shape || !jacket) {
+      window.location.assign(book.href);
+      return;
+    }
+
+    const shift = getComputedStyle(slot).getPropertyValue("--open-shift");
+    setOpeningId(book.id);
+    setRaisedIds((current) => new Set(current).add(book.id));
+
+    const move = model.animate(
+      [{ transform: getComputedStyle(model).transform }, { transform: `translate3d(${shift}, -22px, 90px)` }],
+      { duration: 420, easing: EASE, fill: "forwards" },
+    );
+    const turn = shape.animate(
+      [{ transform: getComputedStyle(shape).transform }, { transform: "rotateY(-90deg)" }],
+      { duration: 420, easing: EASE, fill: "forwards" },
+    );
+    const animations = [move, turn];
+    animationsRef.current = animations;
+
+    try {
+      await Promise.all([move.finished, turn.finished]);
+      if (animationsRef.current !== animations) return;
+      const open = jacket.animate(
+        [{ transform: "rotateY(0deg)" }, { transform: "rotateY(-125deg)", offset: 0.8 }, { transform: "rotateY(-125deg)" }],
+        { duration: 650, easing: "cubic-bezier(.3,0,.2,1)", fill: "forwards" },
+      );
+      animationsRef.current.push(open);
+      await open.finished;
+      if (animationsRef.current !== animations) return;
+      window.location.assign(book.href);
+    } catch {
+      if (animationsRef.current === animations) {
+        animationsRef.current = [];
+        setOpeningId(null);
+      }
+    }
+  };
 
   return (
-    <figure>
-      <svg
-        ref={ref}
-        viewBox="0 0 760 300"
-        className="draw w-full overflow-visible"
-        fill="none"
-        stroke="currentColor"
-        strokeWidth={1}
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        role="group"
-        aria-label="Bookshelf"
-      >
-        {plant()}
-        {placed.map(({ book, left }) => {
-          const top = BASE - book.height;
-          const right = left + book.width;
-          const mid = left + book.width / 2;
-          return (
-            <a
-              key={book.id}
-              href={book.href}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="book-link"
-              aria-label={`${book.title} by ${book.author}`}
-              onPointerEnter={() => setActiveId(book.id)}
-              onPointerLeave={() => setActiveId(null)}
-              onFocus={() => setActiveId(book.id)}
-              onBlur={() => setActiveId(null)}
-            >
-              <g className="book">
-                <rect x={left} y={top} width={book.width} height={book.height} fill="var(--color-paper)" stroke="none" />
-                {stroke(`M${left} ${BASE} V${top} H${right} V${BASE}`)}
-                {stroke(`M${left} ${top + 12} H${right}`)}
-                {stroke(`M${left} ${top + 16} H${right}`)}
-                {stroke(`M${left} ${BASE - 14} H${right}`)}
-                <text
-                  className="fade"
-                  x={mid}
-                  y={top + (book.height - 2) / 2 + 8}
-                  transform={`rotate(-90 ${mid} ${top + (book.height - 2) / 2 + 8})`}
-                  textAnchor="middle"
-                  dominantBaseline="middle"
-                  fill="currentColor"
-                  stroke="none"
-                  fontSize={7}
-                  letterSpacing="0.12em"
-                  style={{ textTransform: "uppercase" }}
-                >
-                  {book.spine}
-                </text>
-              </g>
-            </a>
-          );
-        })}
-        {stackAndCup(BOOKS_RIGHT + 22)}
-        {shelf()}
-      </svg>
-      <figcaption className="mt-6 flex min-h-6 items-baseline justify-between gap-4 text-[15px]">
-        {active ? (
+    <section className="bookshelf-section" aria-label="Bookshelf">
+      <div className="shelf-scene" data-previewing={activeId !== null}>
+        <div className="shelf-books">
+          {books.map((book) => {
+            const style: BookStyle = {
+              "--book-color": book.color,
+              "--book-ink": book.ink,
+              "--book-height": `${book.height}px`,
+              "--book-width": `${book.width}px`,
+              "--cover-ratio": book.coverRatio ?? 140 / 172,
+            };
+            const spine = spineLayout(book);
+            return (
+              <a
+                key={book.id}
+                className="book-slot"
+                href={book.href}
+                style={style}
+                aria-label={`Open ${book.title} by ${book.author}`}
+                aria-busy={openingId === book.id}
+                data-active={activeId === book.id}
+                data-raised={raisedIds.has(book.id)}
+                onTransitionEnd={(event) => {
+                  if (
+                    event.propertyName !== "transform" ||
+                    event.target !== event.currentTarget.querySelector(".book-model") ||
+                    activeId === book.id
+                  )
+                    return;
+                  setRaisedIds((current) => {
+                    const next = new Set(current);
+                    next.delete(book.id);
+                    return next;
+                  });
+                }}
+                onPointerEnter={(event) => {
+                  if (event.pointerType === "mouse") previewBook(book.id);
+                }}
+                onPointerLeave={() => previewBook(null)}
+                onFocus={(event) => {
+                  if (event.currentTarget.matches(":focus-visible")) previewBook(book.id);
+                }}
+                onBlur={() => previewBook(null)}
+                onKeyDown={(event) => {
+                  if (event.key !== "Escape") return;
+                  if (leaveTimerRef.current) clearTimeout(leaveTimerRef.current);
+                  animationsRef.current.forEach((animation) => animation.cancel());
+                  animationsRef.current = [];
+                  setOpeningId(null);
+                  setPreviewedId(null);
+                }}
+                onClick={(event) => openBook(event, book)}
+              >
+                <span className="book-model" aria-hidden="true">
+                  <span className="book-shape">
+                    <span className="book-spine" data-photo={!!book.spine}>
+                      {book.spine ? (
+                        <Image src={book.spine} alt="" fill sizes="48px" className="spine-photo" draggable={false} />
+                      ) : (
+                        <>
+                          <span className="spine-title" style={{ fontSize: spine.titleSize }}>
+                            {book.title}
+                          </span>
+                          {spine.author && <span className="spine-author">{spine.author}</span>}
+                        </>
+                      )}
+                    </span>
+                    <span className="book-pages" />
+                    <span className="book-cover" data-project={!book.cover}>
+                      <span className="book-inside">
+                        <strong>{book.title}</strong>
+                        <span>{book.description ?? book.author}</span>
+                      </span>
+                      <span className="book-jacket">
+                        <span className="jacket-back" />
+                        {book.cover ? (
+                          <Image src={book.cover} alt="" width={140} height={book.height} draggable={false} />
+                        ) : (
+                          <span className="cover-fallback">
+                            <strong>{book.title}</strong>
+                            <span>{book.description ?? book.author}</span>
+                          </span>
+                        )}
+                      </span>
+                    </span>
+                  </span>
+                </span>
+              </a>
+            );
+          })}
+        </div>
+        <div className="shelf-board" aria-hidden="true" />
+      </div>
+      <div className="book-caption" aria-live="polite" aria-atomic="true">
+        {activeBook && (
           <>
-            <span>
-              <span className="font-serif text-lg italic">{active.title}</span>
-              <span className="text-muted"> by {active.author}</span>
+            <span className="caption-title">
+              {activeBook.title}
+              <span aria-hidden="true"> ↗</span>
             </span>
-            <span className="text-[11px] uppercase tracking-[0.18em] text-muted">{active.category}</span>
+            <span>{activeBook.description ?? `${activeBook.author} · ${activeBook.category}`}</span>
           </>
-        ) : (
-          <span className="text-muted">Books I keep coming back to. Pull one off the shelf.</span>
         )}
-      </figcaption>
-    </figure>
+      </div>
+    </section>
   );
 }

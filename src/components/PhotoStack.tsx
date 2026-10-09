@@ -37,7 +37,7 @@ export default function PhotoStack() {
             ) : (
               <div className="aspect-square w-full rounded-[1px] bg-[#f2f2f4]" />
             )}
-            <figcaption className="absolute right-0 bottom-[5px] left-0 text-center font-script text-[14px] leading-none text-ink/70">
+            <figcaption className="absolute right-0 bottom-[6px] left-0 text-center text-[11px] leading-none text-muted">
               {photo.caption}
             </figcaption>
           </figure>

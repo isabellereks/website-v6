@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Script from "next/script";
 import localFont from "next/font/local";
-import { Inter_Tight, Instrument_Serif, Mrs_Saint_Delafield } from "next/font/google";
+import { Inter_Tight } from "next/font/google";
 import "./globals.css";
 
 // Open Runde (from v4): a rounded Inter, SIL Open Font License.
@@ -20,19 +20,6 @@ const interTight = Inter_Tight({
   subsets: ["latin"],
 });
 
-const instrumentSerif = Instrument_Serif({
-  variable: "--font-instrument-serif",
-  subsets: ["latin"],
-  weight: "400",
-  style: ["normal", "italic"],
-});
-
-const signature = Mrs_Saint_Delafield({
-  variable: "--font-signature",
-  subsets: ["latin"],
-  weight: "400",
-});
-
 export const metadata: Metadata = {
   metadataBase: new URL("https://isabellereks.com"),
   title: "Isabelle Reksopuro",
@@ -41,7 +28,7 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
-    <html lang="en" className={`${openRunde.variable} ${interTight.variable} ${instrumentSerif.variable} ${signature.variable}`}>
+    <html lang="en" className={`${openRunde.variable} ${interTight.variable}`}>
       <head>
         {process.env.NODE_ENV === "development" && (
           <Script
