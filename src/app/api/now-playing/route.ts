@@ -9,6 +9,7 @@ export interface NowPlaying {
   playedAt: string | null;
   progressMs: number | null;
   durationMs: number;
+  previewUrl: string | null;
 }
 
 interface SpotifyTrack {
@@ -34,7 +35,24 @@ const toNowPlaying = (
   playedAt,
   progressMs,
   durationMs: track.duration_ms,
+  previewUrl: null,
 });
+
+// Spotify no longer gives previews to new apps, so borrow Apple's 30s preview
+// from the free iTunes Search API. Visitors play it in their own browser.
+async function findPreview(title: string, artist: string) {
+  try {
+    const term = `${title.replace(/\(.*?\)/g, "")} ${artist.split(",")[0]}`;
+    const res = await fetch(
+      `https://itunes.apple.com/search?${new URLSearchParams({ term, entity: "song", limit: "1" })}`,
+    );
+    if (!res.ok) return null;
+    const data: { results: { previewUrl?: string }[] } = await res.json();
+    return data.results[0]?.previewUrl ?? null;
+  } catch {
+    return null;
+  }
+}
 
 async function getAccessToken() {
   const { SPOTIFY_CLIENT_ID, SPOTIFY_CLIENT_SECRET, SPOTIFY_REFRESH_TOKEN } = process.env;
@@ -73,6 +91,7 @@ export async function GET() {
   await connection();
   const token = await getAccessToken();
   const track = token ? await getNowPlaying(token) : null;
+  if (track) track.previewUrl = await findPreview(track.title, track.artist);
   return Response.json(track, {
     headers: { "Cache-Control": "public, s-maxage=15, stale-while-revalidate=30" },
   });

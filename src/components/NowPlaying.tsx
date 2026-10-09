@@ -4,21 +4,11 @@ import { useEffect, useRef, useState } from "react";
 import type { NowPlaying as Track } from "@/app/api/now-playing/route";
 
 const formatTime = (ms: number) => {
-  const s = Math.max(0, Math.floor(ms / 1000));
+  const s = Math.max(0, Math.round(ms / 1000));
   return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, "0")}`;
 };
 
-function timeAgo(iso: string) {
-  const minutes = Math.round((Date.now() - new Date(iso).getTime()) / 60000);
-  if (minutes < 1) return "just now";
-  if (minutes < 60) return `${minutes}m ago`;
-  const hours = Math.round(minutes / 60);
-  if (hours < 24) return `${hours}h ago`;
-  return `${Math.round(hours / 24)}d ago`;
-}
-
-// The waveform takes the album art's color, like iOS does. Falls back to white
-// if the image can't be read (e.g. CORS).
+// The waveform takes the album art's most vivid color, like iOS.
 function useAlbumTint(src: string | null | undefined) {
   const [tint, setTint] = useState<string | null>(null);
   useEffect(() => {
@@ -28,24 +18,23 @@ function useAlbumTint(src: string | null | undefined) {
     img.onload = () => {
       try {
         const canvas = document.createElement("canvas");
-        canvas.width = canvas.height = 8;
+        canvas.width = canvas.height = 10;
         const ctx = canvas.getContext("2d");
         if (!ctx) return;
-        ctx.drawImage(img, 0, 0, 8, 8);
-        const data = ctx.getImageData(0, 0, 8, 8).data;
-        // Pick the most saturated pixel so the tint isn't a muddy average.
+        ctx.drawImage(img, 0, 0, 10, 10);
+        const data = ctx.getImageData(0, 0, 10, 10).data;
         let best = [255, 255, 255];
-        let bestSat = -1;
+        let bestScore = -1;
         for (let i = 0; i < data.length; i += 4) {
           const [r, g, b] = [data[i], data[i + 1], data[i + 2]];
-          const sat = Math.max(r, g, b) - Math.min(r, g, b);
-          if (sat > bestSat) {
-            bestSat = sat;
+          const max = Math.max(r, g, b);
+          const score = (max - Math.min(r, g, b)) * (max > 60 ? 1 : 0.2);
+          if (score > bestScore) {
+            bestScore = score;
             best = [r, g, b];
           }
         }
-        // Lighten so it reads on black.
-        const [r, g, b] = best.map((c) => Math.round(c + (255 - c) * 0.35));
+        const [r, g, b] = best.map((c) => Math.round(c + (255 - c) * 0.25));
         setTint(`rgb(${r} ${g} ${b})`);
       } catch {
         setTint(null);
@@ -56,21 +45,19 @@ function useAlbumTint(src: string | null | undefined) {
   return src ? tint : null;
 }
 
-function Waveform({ playing, tint, size }: { playing: boolean; tint: string | null; size: "sm" | "lg" }) {
-  const h = size === "sm" ? 12 : 18;
+function Waveform({ playing, tint, height }: { playing: boolean; tint: string | null; height: number }) {
   return (
-    <span aria-hidden className="flex items-center gap-[2px]" style={{ height: h }}>
-      {[0, 1, 2, 3, 4].map((i) => (
+    <span aria-hidden className="flex items-center gap-[2px]" style={{ height }}>
+      {[0.55, 0.9, 0.7, 1, 0.6, 0.8].map((scale, i) => (
         <span
           key={i}
-          className="island-bar w-[2.5px] rounded-full"
+          className="island-bar w-[3px] rounded-full"
           style={{
-            background: tint ?? "white",
-            opacity: playing ? 1 : 0.35,
-            animationDelay: `${i * -173}ms`,
-            animationDuration: `${780 + i * 90}ms`,
+            background: tint ?? "#fff",
+            animationDuration: `${620 + ((i * 137) % 380)}ms`,
+            animationDelay: `${-i * 211}ms`,
             animationPlayState: playing ? "running" : "paused",
-            ["--bar-max" as string]: `${h}px`,
+            ["--bar-max" as string]: `${Math.round(height * scale)}px`,
           }}
         />
       ))}
@@ -83,8 +70,8 @@ function Art({ src, size, radius }: { src: string | null | undefined; size: numb
     return (
       <span
         aria-hidden
-        className="grid shrink-0 place-items-center bg-white/10 text-white/50"
-        style={{ width: size, height: size, borderRadius: radius, fontSize: size * 0.45 }}
+        className="grid shrink-0 place-items-center bg-[#2c2c2e] text-[#8e8e93]"
+        style={{ width: size, height: size, borderRadius: radius, fontSize: size * 0.42 }}
       >
         ♪
       </span>
@@ -94,13 +81,44 @@ function Art({ src, size, radius }: { src: string | null | undefined; size: numb
   return <img src={src} alt="" className="shrink-0 object-cover" style={{ width: size, height: size, borderRadius: radius }} />;
 }
 
-// Apple-style Dynamic Island: a compact pill that springs open into a card on tap.
+// Filled transport icons drawn to match iOS's backward/play/pause/forward glyphs.
+const Icon = {
+  back: (
+    <svg viewBox="0 0 34 20" width="27" height="16" fill="currentColor" aria-hidden>
+      <path d="M15.2 2.6c0-1.3-1.4-2-2.4-1.3L1.6 8.7c-.9.6-.9 2 0 2.6l11.2 7.4c1 .7 2.4 0 2.4-1.3z" />
+      <path d="M32.2 2.6c0-1.3-1.4-2-2.4-1.3L18.6 8.7c-.9.6-.9 2 0 2.6l11.2 7.4c1 .7 2.4 0 2.4-1.3z" />
+    </svg>
+  ),
+  forward: (
+    <svg viewBox="0 0 34 20" width="27" height="16" fill="currentColor" aria-hidden>
+      <path d="M1.8 2.6c0-1.3 1.4-2 2.4-1.3l11.2 7.4c.9.6.9 2 0 2.6L4.2 18.7c-1 .7-2.4 0-2.4-1.3z" />
+      <path d="M18.8 2.6c0-1.3 1.4-2 2.4-1.3l11.2 7.4c.9.6.9 2 0 2.6l-11.2 7.4c-1 .7-2.4 0-2.4-1.3z" />
+    </svg>
+  ),
+  play: (
+    <svg viewBox="0 0 20 22" width="24" height="27" fill="currentColor" aria-hidden>
+      <path d="M2 2.2c0-1.4 1.5-2.2 2.7-1.5l14.2 8.8c1.1.7 1.1 2.3 0 3L4.7 21.3C3.5 22 2 21.2 2 19.8z" />
+    </svg>
+  ),
+  pause: (
+    <svg viewBox="0 0 20 22" width="24" height="27" fill="currentColor" aria-hidden>
+      <rect x="2" y="1" width="5.6" height="20" rx="1.6" />
+      <rect x="12.4" y="1" width="5.6" height="20" rx="1.6" />
+    </svg>
+  ),
+};
+
+// iOS Dynamic Island, Now Playing. Click to expand, click outside or Escape to close.
+// Play runs a 30s preview of the current song in the visitor's browser.
 export default function NowPlaying() {
   const [track, setTrack] = useState<Track | null>(null);
-  const [fetchedAt, setFetchedAt] = useState(0);
-  const [now, setNow] = useState(0);
   const [open, setOpen] = useState(false);
+  const [previewPlaying, setPreviewPlaying] = useState(false);
+  const [previewStarted, setPreviewStarted] = useState(false);
+  const [preview, setPreview] = useState({ current: 0, duration: 30 });
+  const [liveClock, setLiveClock] = useState({ fetchedAt: 0, now: 0 });
   const islandRef = useRef<HTMLDivElement>(null);
+  const audioRef = useRef<HTMLAudioElement | null>(null);
   const tint = useAlbumTint(track?.albumArt);
 
   useEffect(() => {
@@ -110,8 +128,18 @@ export default function NowPlaying() {
         .then((r) => (r.ok ? r.json() : null))
         .then((t: Track | null) => {
           if (cancelled) return;
-          setTrack(t);
-          setFetchedAt(Date.now());
+          setTrack((prev) => {
+            // A new song means the old preview no longer applies.
+            if (prev?.previewUrl !== t?.previewUrl && audioRef.current) {
+              audioRef.current.pause();
+              audioRef.current = null;
+              setPreviewPlaying(false);
+              setPreviewStarted(false);
+              setPreview({ current: 0, duration: 30 });
+            }
+            return t;
+          });
+          setLiveClock({ fetchedAt: Date.now(), now: Date.now() });
         })
         .catch(() => {});
     load();
@@ -119,17 +147,17 @@ export default function NowPlaying() {
     return () => {
       cancelled = true;
       clearInterval(id);
+      audioRef.current?.pause();
     };
   }, []);
 
-  // Tick the progress bar locally between fetches.
+  // Advance her live listening position between fetches.
   useEffect(() => {
     if (!open || !track?.isPlaying) return;
-    const id = setInterval(() => setNow(Date.now()), 1000);
+    const id = setInterval(() => setLiveClock((c) => ({ ...c, now: Date.now() })), 1000);
     return () => clearInterval(id);
   }, [open, track?.isPlaying]);
 
-  // Close on outside tap or Escape, like iOS.
   useEffect(() => {
     if (!open) return;
     const onPointer = (e: PointerEvent) => {
@@ -144,63 +172,121 @@ export default function NowPlaying() {
     };
   }, [open]);
 
-  const playing = !!track?.isPlaying;
-  const progress =
-    track?.isPlaying && track.progressMs !== null
-      ? Math.min(track.durationMs, track.progressMs + Math.max(0, (now || fetchedAt) - fetchedAt))
-      : null;
-  const status = track ? (playing ? "Now playing" : `Last played${track.playedAt ? ` ${timeAgo(track.playedAt)}` : ""}`) : null;
+  const audio = () => {
+    if (!track?.previewUrl) return null;
+    if (!audioRef.current) {
+      const a = new Audio(track.previewUrl);
+      a.addEventListener("timeupdate", () => setPreview({ current: a.currentTime, duration: a.duration || 30 }));
+      a.addEventListener("loadedmetadata", () => setPreview({ current: a.currentTime, duration: a.duration || 30 }));
+      a.addEventListener("ended", () => setPreviewPlaying(false));
+      audioRef.current = a;
+      setPreviewStarted(true);
+    }
+    return audioRef.current;
+  };
+
+  const togglePlay = () => {
+    const a = audio();
+    if (!a) return;
+    if (a.paused) {
+      a.play().then(() => setPreviewPlaying(true)).catch(() => {});
+    } else {
+      a.pause();
+      setPreviewPlaying(false);
+    }
+  };
+
+  const restart = () => {
+    const a = audio();
+    if (!a) return;
+    a.currentTime = 0;
+    setPreview((p) => ({ ...p, current: 0 }));
+  };
+
+  const skip = () => {
+    const a = audio();
+    if (!a) return;
+    a.currentTime = Math.min((a.duration || 30) - 0.1, a.currentTime + 10);
+  };
+
+  const animating = previewPlaying || (!previewStarted && !!track?.isPlaying);
+
+  // The scrubber follows the preview once a visitor plays it; otherwise her live position.
+  const usingPreview = previewStarted;
+  const elapsed = usingPreview
+    ? preview.current * 1000
+    : track?.isPlaying && track.progressMs !== null
+      ? Math.min(track.durationMs, track.progressMs + (liveClock.now - liveClock.fetchedAt))
+      : 0;
+  const total = usingPreview ? preview.duration * 1000 : (track?.durationMs ?? 30_000);
 
   return (
-    <div className="relative h-[37px] w-[190px]">
-      <div ref={islandRef} className="island absolute top-0 left-1/2 z-50 -translate-x-1/2 bg-black text-white" data-open={open}>
-        {/* Compact */}
+    <div className="relative h-[37px] w-[236px]">
+      <div ref={islandRef} className="island absolute top-0 left-1/2 z-50 -translate-x-1/2" data-open={open}>
+        {/* Compact: art leading, waveform trailing, camera space in the middle */}
         <button
           type="button"
           aria-expanded={open}
           aria-controls="island-card"
-          aria-label={track ? `${status}: ${track.title} by ${track.artist}` : "Music"}
+          aria-label={track ? `${track.isPlaying ? "Now playing" : "Last played"}: ${track.title} by ${track.artist}` : "Music"}
           onClick={() => setOpen(true)}
-          className="island-compact absolute inset-0 flex items-center justify-between rounded-[inherit] px-[8px]"
+          className="island-compact absolute inset-0 flex items-center justify-between pr-[12px] pl-[7px]"
         >
-          <Art src={track?.albumArt} size={22} radius={6} />
-          <Waveform playing={playing} tint={tint} size="sm" />
+          <Art src={track?.albumArt} size={23} radius={6} />
+          <Waveform playing={animating} tint={tint} height={14} />
         </button>
 
-        {/* Expanded */}
-        <div id="island-card" className="island-card absolute inset-0 flex flex-col justify-between p-[18px]" inert={!open}>
-          <div className="flex items-center gap-3">
-            <Art src={track?.albumArt} size={56} radius={12} />
+        {/* Expanded, matching liam.cv / iOS: art + title, scrubber, centered transport */}
+        <div id="island-card" className="island-card absolute inset-0 flex flex-col px-[20px] pt-[20px] pb-[18px]" inert={!open}>
+          <div className="flex items-center gap-[14px]">
+            <a href={track?.url ?? "https://open.spotify.com"} target="_blank" rel="noopener noreferrer" aria-label="Open in Spotify">
+              <Art src={track?.albumArt} size={56} radius={12} />
+            </a>
             <div className="min-w-0 flex-1">
-              <p className="truncate text-[15px] leading-5 font-semibold">{track?.title ?? "Not playing"}</p>
-              <p className="truncate text-[14px] leading-5 text-white/55">{track?.artist ?? "Spotify is quiet right now"}</p>
+              <p className="truncate text-[17px] leading-[22px] font-semibold tracking-[-0.3px] text-white">
+                {track?.title ?? "Not Playing"}
+              </p>
+              <p className="truncate text-[15px] leading-[20px] tracking-[-0.2px] text-[#8e8e93]">{track?.artist ?? "Spotify"}</p>
             </div>
-            <Waveform playing={playing} tint={tint} size="lg" />
           </div>
 
-          {progress !== null && track ? (
-            <div className="flex items-center gap-2.5 text-[11px] text-white/55 tabular-nums">
-              <span className="w-8">{formatTime(progress)}</span>
-              <span className="h-[5px] flex-1 overflow-hidden rounded-full bg-white/20">
-                <span
-                  className="block h-full rounded-full bg-white transition-[width] duration-1000 ease-linear"
-                  style={{ width: `${(progress / track.durationMs) * 100}%` }}
-                />
-              </span>
-              <span className="w-8 text-right">-{formatTime(track.durationMs - progress)}</span>
-            </div>
-          ) : (
-            <p className="text-[12px] text-white/45">{status ?? "Nothing played recently"}</p>
-          )}
+          <div className="mt-[16px] flex items-center gap-[8px] text-[11px] font-medium text-[#8e8e93] tabular-nums">
+            <span className="w-[28px]">{formatTime(elapsed)}</span>
+            <span className="relative h-[4px] flex-1 overflow-hidden rounded-full bg-[#ffffff2e]">
+              <span className="absolute inset-y-0 left-0 rounded-full bg-[#ffffffb3]" style={{ width: `${Math.min(100, (elapsed / total) * 100)}%` }} />
+            </span>
+            <span className="w-[32px] text-right">-{formatTime(total - elapsed)}</span>
+          </div>
 
-          <a
-            href={track?.url ?? "https://open.spotify.com"}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="self-center rounded-full bg-white/12 px-4 py-1.5 text-[12px] font-medium text-white transition-colors hover:bg-white/20"
-          >
-            Open in Spotify
-          </a>
+          <div className="mt-auto flex items-center justify-center gap-[52px] text-white">
+            <button
+              type="button"
+              onClick={restart}
+              disabled={!track?.previewUrl || elapsed < 1000}
+              aria-label="Restart"
+              className="transition-opacity active:opacity-50 disabled:opacity-35"
+            >
+              {Icon.back}
+            </button>
+            <button
+              type="button"
+              onClick={togglePlay}
+              disabled={!track?.previewUrl}
+              aria-label={previewPlaying ? "Pause" : "Play"}
+              className="grid h-[28px] w-[28px] place-items-center transition-opacity active:opacity-50 disabled:opacity-35"
+            >
+              {previewPlaying ? Icon.pause : Icon.play}
+            </button>
+            <button
+              type="button"
+              onClick={skip}
+              disabled={!track?.previewUrl}
+              aria-label="Skip ahead 10 seconds"
+              className="transition-opacity active:opacity-50 disabled:opacity-35"
+            >
+              {Icon.forward}
+            </button>
+          </div>
         </div>
       </div>
     </div>
