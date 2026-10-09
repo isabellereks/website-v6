@@ -8,7 +8,7 @@ const nav = [
 
 export default function SiteHeader() {
   return (
-    <header className="sticky top-0 z-40 border-b border-rule bg-paper/85 backdrop-blur-md">
+    <header className="sticky top-0 z-40 border-b border-rule bg-white/80 backdrop-blur-xl backdrop-saturate-150">
       <div className="mx-auto grid h-14 max-w-[1120px] grid-cols-[1fr_auto_1fr] items-center px-5 md:px-10">
         <a href="#top" className="font-display text-[15px] font-bold tracking-tight">
           Isabelle Reksopuro

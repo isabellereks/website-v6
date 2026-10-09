@@ -49,7 +49,6 @@ export default function Home() {
       <main id="top" className="sheet">
         <section className="row">
           <div className="cell overflow-hidden !pt-20 !pb-16 md:!pt-28 md:!pb-20">
-            <div aria-hidden className="hatch hidden h-[260px] w-[260px] md:block" />
             <h1 className="font-display text-[clamp(3.25rem,10vw,7.5rem)] leading-[0.88] font-bold tracking-[-0.045em]">
               Isabelle
               <br />

@@ -32,11 +32,10 @@
 }
 
 @theme inline {
-  --color-paper: #f8f6f1;
-  --color-margin: #efebe3;
-  --color-ink: #1a1a1a;
-  --color-muted: #8a847d;
-  --color-rule: #dcd6cd;
+  --color-paper: #ffffff;
+  --color-ink: #1d1d1f;
+  --color-muted: #6e6e73;
+  --color-rule: #e8e8ed;
   --color-rose: #ad606e;
   --font-sans: "PP Neue Gstaad", var(--font-inter-tight), ui-sans-serif, system-ui, sans-serif;
   --font-serif: var(--font-instrument-serif), Georgia, serif;
@@ -53,13 +52,8 @@ html {
   scroll-padding-top: 4rem;
 }
 
-/* Graph paper in the margins, a clean sheet in the middle. */
 body {
-  background-color: var(--color-margin);
-  background-image:
-    linear-gradient(rgb(0 0 0 / 0.035) 1px, transparent 1px),
-    linear-gradient(90deg, rgb(0 0 0 / 0.035) 1px, transparent 1px);
-  background-size: 24px 24px;
+  background: var(--color-paper);
   color: var(--color-ink);
   font-family: var(--font-sans);
   font-weight: 300;
@@ -123,7 +117,7 @@ body {
   z-index: 1;
   width: 7px;
   height: 7px;
-  border: 1px solid var(--color-rule);
+  border: 1px solid #d2d2d7;
   background: var(--color-paper);
 }
 .cell::before {
@@ -136,20 +130,6 @@ body {
 .label {
   font-size: 13px;
   color: var(--color-muted);
-}
-
-/* Diagonal graph-paper corner, like a cut sheet. */
-.hatch {
-  position: absolute;
-  top: 0;
-  right: 0;
-  pointer-events: none;
-  background-image:
-    linear-gradient(var(--color-rule) 1px, transparent 1px),
-    linear-gradient(90deg, var(--color-rule) 1px, transparent 1px);
-  background-size: 10px 10px;
-  clip-path: polygon(0 0, 100% 0, 100% 100%);
-  opacity: 0.7;
 }
 
 /* Slide up out of a blur when scrolled into view. */

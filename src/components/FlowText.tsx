@@ -21,7 +21,7 @@ interface Line {
   muted?: boolean;
 }
 
-const BOWL = 128; // drawing size in px
+const BOWL = 132; // drawing size in px
 const RADIUS = BOWL / 2 + 14; // text keeps this far from the bowl's center
 const MIN_SLOT = 56; // don't squeeze words into slivers
 const PARAGRAPH_GAP = 14;
@@ -70,10 +70,15 @@ function layoutAround(
   return { lines, height: Math.max(y - PARAGRAPH_GAP, bowl.y + BOWL) };
 }
 
+// A chawan: hand-thrown rim, glaze drip, foot ring and a whisked matcha surface.
 function MatchaBowl() {
+  const foam = [
+    [48, 52], [53, 50], [56, 55], [61, 51.5], [66, 49.5], [69, 55.5], [73, 52], [78, 50], [81, 55], [86, 52], [91, 54],
+    [44, 54.5], [63, 57], [75, 57.5], [58, 48.8],
+  ];
   return (
     <svg
-      viewBox="0 0 128 128"
+      viewBox="0 0 132 132"
       width={BOWL}
       height={BOWL}
       fill="none"
@@ -85,13 +90,42 @@ function MatchaBowl() {
       className="draw"
       data-inview="true"
     >
-      <path className="steam" pathLength={1} d="M52 44 C46 34 58 28 52 16" />
-      <path className="steam" pathLength={1} d="M66 44 C60 32 72 26 66 12" />
-      <path className="steam" pathLength={1} d="M80 44 C74 34 86 28 80 18" />
-      <ellipse cx="64" cy="58" rx="44" ry="9" fill="var(--color-paper)" />
-      <path d="M38 58 C46 54 54 61 64 57 C74 53 82 61 90 57" />
-      <path d="M20 58 C22 86 40 102 64 102 C88 102 106 86 108 58" />
-      <path d="M48 102 L50 110 L78 110 L80 102" />
+      <path className="steam" pathLength={1} d="M52 36 C46 27 57 22 51 10" />
+      <path className="steam" pathLength={1} d="M66 34 C60 24 71 18 65 4" />
+      <path className="steam" pathLength={1} d="M80 36 C74 27 85 22 79 12" />
+      {/* Body and foot ring */}
+      <path
+        pathLength={1}
+        d="M16 52 C17 74 28 94 48 101 C58 104.5 74 104.5 84 101 C104 94 115 74 116 52"
+        fill="var(--color-paper)"
+      />
+      <path pathLength={1} d="M50 102 L49 110 C49 112 53 113 66 113 C79 113 83 112 83 110 L82 102" fill="var(--color-paper)" />
+      <path pathLength={1} d="M52 109.5 C58 108 74 108 80 109.5" />
+      {/* Glaze line with a few drips running down toward the bare clay */}
+      <path
+        pathLength={1}
+        d="M18.5 66 C24 67 27 66 29 67 C30.5 68 30.5 75 32.5 75 C34.5 75 34 68 36 67.5 C42 66.5 48 68 54 67.5 C57 67.3 57.5 71 59.5 79 C61 82 63 81 63.5 77 C64 72 64 68.5 67 68 C74 67 80 68.5 86 67.5 C88 67.2 88.5 72 90.5 72 C92.5 72 92 67.5 95 67 C101 66 107 66.5 113.5 64.5"
+      />
+      {/* Bare clay speckle below the glaze */}
+      {[
+        [40, 84], [46, 90], [54, 87], [72, 89], [80, 85], [88, 90], [96, 83], [62, 94], [35, 78], [102, 78],
+      ].map(([cx, cy]) => (
+        <circle key={`c${cx}-${cy}`} pathLength={1} cx={cx} cy={cy} r={0.35} fill="currentColor" />
+      ))}
+      {/* Rim: a slightly uneven ellipse, like it was thrown by hand */}
+      <path
+        pathLength={1}
+        d="M16 52 C16 45 38 40 66 40.5 C95 40 116 45.5 116 52 C116 59 94 63.5 66 63.5 C38 63.5 16 59 16 52 Z"
+        fill="var(--color-paper)"
+      />
+      <path pathLength={1} d="M20.5 52.5 C21.5 47 41.5 43.5 66 43.5 C92 43.5 110.5 47.5 111.5 52.5" />
+      {/* Whisked matcha */}
+      <ellipse cx="66" cy="53.5" rx="41" ry="7.5" fill="#b5ca7c" fillOpacity={0.6} stroke="none" />
+      <path pathLength={1} d="M54 53 C58 49.5 70 49 76 52 C80 54 76 56.5 68 56" strokeOpacity={0.45} />
+      <path pathLength={1} d="M62 52.5 C66 51 72 51.5 73 53" strokeOpacity={0.45} />
+      {foam.map(([cx, cy]) => (
+        <circle key={`${cx}-${cy}`} pathLength={1} cx={cx} cy={cy} r={0.45} strokeOpacity={0.7} />
+      ))}
     </svg>
   );
 }
