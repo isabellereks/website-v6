@@ -1,5 +1,28 @@
 @import "tailwindcss";
 
+/* PP Neue Gstaad is a personal-use trial, so the files are gitignored;
+   without them the site falls back to Inter Tight. */
+@font-face {
+  font-family: "PP Neue Gstaad";
+  src: url("/fonts/PPNeueGstaad-Light.otf") format("opentype");
+  font-weight: 300;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: "PP Neue Gstaad";
+  src: url("/fonts/PPNeueGstaad-LightItalic.otf") format("opentype");
+  font-weight: 300;
+  font-style: italic;
+  font-display: swap;
+}
+@font-face {
+  font-family: "PP Neue Gstaad";
+  src: url("/fonts/PPNeueGstaad-Regular.otf") format("opentype");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
 @font-face {
   font-family: "PP Neue Gstaad";
   src: url("/fonts/PPNeueGstaad-Bold.otf") format("opentype");
@@ -14,7 +37,7 @@
   --color-muted: #8a847d;
   --color-rule: #dcd6cd;
   --color-rose: #ad606e;
-  --font-sans: var(--font-inter-tight), ui-sans-serif, system-ui, sans-serif;
+  --font-sans: "PP Neue Gstaad", var(--font-inter-tight), ui-sans-serif, system-ui, sans-serif;
   --font-serif: var(--font-instrument-serif), Georgia, serif;
   --font-display: "PP Neue Gstaad", var(--font-inter-tight), sans-serif;
 }

@@ -17,7 +17,7 @@ export default function Home() {
         </div>
 
         <section className="pt-20 pb-20 md:pt-32 md:pb-28">
-          <h1 className="max-w-4xl text-[clamp(2.5rem,6.5vw,5.25rem)] leading-[1.02] font-extralight tracking-[-0.03em]">
+          <h1 className="max-w-4xl text-[clamp(2.5rem,6.5vw,5.25rem)] leading-[1.02] font-light tracking-[-0.02em]">
             Technology is moving faster than the people regulating it.{" "}
             <span className="font-serif italic">I&rsquo;m working on that.</span>
           </h1>
