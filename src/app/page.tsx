@@ -3,7 +3,7 @@ import DecodeText, { type DecodePart } from "@/components/DecodeText";
 import { MapIcon, SimIcon, TrackerIcon } from "@/components/LineIcons";
 import Reveal from "@/components/Reveal";
 import WorkTabs from "@/components/WorkTabs";
-import { links } from "@/data/links";
+import SocialLinks from "@/components/SocialLinks";
 
 const summary: DecodePart[] = [
   "I make tech policy easier to understand through ",
@@ -18,18 +18,18 @@ const summary: DecodePart[] = [
 export default function Home() {
   return (
     <main className="mx-auto max-w-[600px] px-4 pt-10 pb-24 md:pt-16">
-      <Reveal>
+      <Reveal className="intro-fade">
         <TopBar />
       </Reveal>
 
-      <Reveal delay={60} className="mt-16 md:mt-20">
+      <Reveal delay={60} className="intro-fade mt-16 md:mt-20">
         <h1 className="font-display text-[20px] leading-[28px] font-normal transition-colors duration-300 ease-[var(--ease)] hover:text-rose">Isabelle Reksopuro</h1>
         <p className="mt-3 font-display text-[19px] leading-[30px] font-normal">
           <DecodeText parts={summary} />
         </p>
       </Reveal>
 
-      <Reveal delay={120} className="mt-6 space-y-2 text-muted">
+      <Reveal delay={120} className="intro-fade mt-6 space-y-2 text-muted">
         <p>
           I’m an Indonesian-American student at the{" "}
           <a className="link" href="https://www.washington.edu/">
@@ -53,22 +53,7 @@ export default function Home() {
           </a>{" "}
           lobbying Congress.
         </p>
-        <p>
-          Say hi on{" "}
-          {links.map((l, i) => (
-            <span key={l.label}>
-              <a className="link" href={l.href}>
-                {l.label}
-              </a>
-              {i < links.length - 2 ? ", " : i === links.length - 2 ? " or " : ""}
-            </span>
-          ))}
-          , or{" "}
-          <a className="link" href="https://cal.com/isabellereks">
-            grab a matcha
-          </a>{" "}
-          :)
-        </p>
+        <SocialLinks />
       </Reveal>
 
       <Reveal delay={180} className="mt-10">

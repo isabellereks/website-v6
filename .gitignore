@@ -38,5 +38,3 @@ yarn-error.log*
 *.tsbuildinfo
 next-env.d.ts
 
-# licensed fonts (not redistributable)
-/public/fonts/PPNeueGstaad-*

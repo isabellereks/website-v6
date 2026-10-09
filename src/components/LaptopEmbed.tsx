@@ -6,10 +6,24 @@ const SITE_WIDTH = 1440;
 const SITE_HEIGHT = 900;
 
 // A MacBook Pro with the real, clickable site running on its screen.
-export default function LaptopEmbed({ url, title }: { url: string; title: string }) {
+export default function LaptopEmbed({
+  url,
+  title,
+  active = true,
+  interactive = true,
+}: {
+  url: string;
+  title: string;
+  // Stacked slides only load their site once they've been shown.
+  active?: boolean;
+  // When false, clicks pass through to whatever wraps the laptop.
+  interactive?: boolean;
+}) {
   const screenRef = useRef<HTMLDivElement>(null);
   const [scale, setScale] = useState(0);
   const [near, setNear] = useState(false);
+  const [shown, setShown] = useState(active);
+  if (active && !shown) setShown(true);
   const [loaded, setLoaded] = useState(false);
 
   useEffect(() => {
@@ -77,17 +91,19 @@ export default function LaptopEmbed({ url, title }: { url: string; title: string
                 Loading {title}…
               </div>
             )}
-            {near && scale > 0 && (
+            {near && shown && scale > 0 && (
               <iframe
                 src={url}
                 title={`${title}, live`}
                 loading="lazy"
                 onLoad={() => setLoaded(true)}
                 className="absolute top-0 left-0 origin-top-left border-0"
+                tabIndex={interactive ? undefined : -1}
                 style={{
                   width: SITE_WIDTH,
                   height: SITE_HEIGHT,
                   transform: `scale(${scale})`,
+                  pointerEvents: interactive ? "auto" : "none",
                   opacity: loaded ? 1 : 0,
                   transition: "opacity 400ms",
                 }}
