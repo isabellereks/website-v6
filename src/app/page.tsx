@@ -32,7 +32,8 @@ export default function Home() {
 
       <Reveal delay={120} className="intro-fade mt-6 space-y-2 text-muted">
         <p>
-          I’m an Indonesian-American student at the{" "}
+          I’m an Indonesian-American student{" "}
+          <s className="text-muted/60 decoration-1">skipping class</s> at the{" "}
           <a className="link" href="https://www.washington.edu/">
             University of Washington
           </a>

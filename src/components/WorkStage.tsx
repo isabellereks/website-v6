@@ -5,6 +5,22 @@ import { createPortal } from "react-dom";
 import { projects } from "@/data/projects";
 import LaptopEmbed from "./LaptopEmbed";
 
+// Page-wide record of when the current wheel gesture began (a 160ms pause starts
+// a new one). Tracked from load, so the stage can tell momentum that started
+// before it appeared from a fresh scroll.
+const wheelGesture = { start: 0, last: 0 };
+if (typeof window !== "undefined") {
+  window.addEventListener(
+    "wheel",
+    () => {
+      const now = performance.now();
+      if (now - wheelGesture.last > 160) wheelGesture.start = now;
+      wheelGesture.last = now;
+    },
+    { passive: true, capture: true },
+  );
+}
+
 const LABEL_SPACE = 56; // room above the laptop for the project label
 const CONTROLS_SPACE = 120; // room below for the slider and details
 
@@ -22,7 +38,11 @@ export default function WorkStage() {
   const [detailsOpen, setDetailsOpen] = useState(false);
   const [layout, setLayout] = useState({ restTop: 0, focusTop: 0, laptopHeight: 0 });
 
+  // Scroll gestures that began before the stage appeared (or before the last
+  // open/close) are trackpad momentum, not intent, so they're ignored.
+  const lastToggleRef = useRef(0);
   const focus = (next: boolean) => {
+    lastToggleRef.current = performance.now();
     setFocused(next);
     if (!next) setDetailsOpen(false);
   };
@@ -69,13 +89,24 @@ export default function WorkStage() {
     };
   }, [focused]);
 
+  useEffect(() => {
+    lastToggleRef.current = performance.now();
+  }, []);
+
   // Scroll / swipe / keys to move between rest and focus.
+  const gestureRef = useRef({ start: 0, sum: 0 });
   useEffect(() => {
     let touchY: number | null = null;
     const onWheel = (e: WheelEvent) => {
-      if (Math.abs(e.deltaY) < 8) return;
-      if (!focused && e.deltaY > 0) focus(true);
-      if (focused && e.deltaY < 0) focus(false);
+      if (wheelGesture.start < lastToggleRef.current) return;
+      const g = gestureRef.current;
+      if (g.start !== wheelGesture.start) {
+        g.start = wheelGesture.start;
+        g.sum = 0;
+      }
+      g.sum += e.deltaY;
+      if (!focused && g.sum > 60) focus(true);
+      if (focused && g.sum < -60) focus(false);
     };
     const onTouchStart = (e: TouchEvent) => (touchY = e.touches[0].clientY);
     const onTouchEnd = (e: TouchEvent) => {
