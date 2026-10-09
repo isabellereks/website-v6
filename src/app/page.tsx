@@ -39,6 +39,21 @@ export default function Home() {
           safety and policy that protects everyday people.
         </p>
         <p>
+          I’ve worked at{" "}
+          <a className="link" href="https://million.dev">
+            startups
+          </a>
+          , in{" "}
+          <a className="link" href="https://www.seattle.gov/city-light">
+            city government
+          </a>
+          , and at{" "}
+          <a className="link" href="https://www.napca.org/">
+            nonprofits
+          </a>{" "}
+          lobbying Congress.
+        </p>
+        <p>
           Say hi on{" "}
           {links.map((l, i) => (
             <span key={l.label}>
