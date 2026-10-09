@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { books } from "@/data/books";
-import { useDrawOnView } from "./useDrawOnView";
+import { useInView } from "./useInView";
 
 const BASE = 250;
 const SHELF_LEFT = 20;
@@ -75,7 +75,7 @@ function shelf() {
 }
 
 export default function Bookshelf() {
-  const ref = useDrawOnView<SVGSVGElement>();
+  const ref = useInView<SVGSVGElement>(0.3);
   const [activeId, setActiveId] = useState<string | null>(null);
   const active = books.find((b) => b.id === activeId);
 

@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Inter_Tight, Instrument_Serif } from "next/font/google";
+import { Inter_Tight, Instrument_Serif, Mrs_Saint_Delafield } from "next/font/google";
 import "./globals.css";
 
 const interTight = Inter_Tight({
@@ -14,6 +14,12 @@ const instrumentSerif = Instrument_Serif({
   style: ["normal", "italic"],
 });
 
+const signature = Mrs_Saint_Delafield({
+  variable: "--font-signature",
+  subsets: ["latin"],
+  weight: "400",
+});
+
 export const metadata: Metadata = {
   metadataBase: new URL("https://isabellereks.com"),
   title: "Isabelle Reksopuro",
@@ -22,7 +28,7 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
-    <html lang="en" className={`${interTight.variable} ${instrumentSerif.variable}`}>
+    <html lang="en" className={`${interTight.variable} ${instrumentSerif.variable} ${signature.variable}`}>
       <body className="min-h-dvh">{children}</body>
     </html>
   );

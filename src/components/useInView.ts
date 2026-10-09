@@ -2,7 +2,9 @@
 
 import { useEffect, useRef } from "react";
 
-export function useDrawOnView<T extends Element>() {
+// Sets data-inview="true" on the element the first time it scrolls into view.
+// CSS keys line drawings, reveals and the signature off that attribute.
+export function useInView<T extends Element>(threshold = 0.25) {
   const ref = useRef<T>(null);
 
   useEffect(() => {
@@ -11,14 +13,14 @@ export function useDrawOnView<T extends Element>() {
     const observer = new IntersectionObserver(
       ([entry]) => {
         if (!entry.isIntersecting) return;
-        el.setAttribute("data-drawn", "true");
+        el.setAttribute("data-inview", "true");
         observer.disconnect();
       },
-      { threshold: 0.3 },
+      { threshold },
     );
     observer.observe(el);
     return () => observer.disconnect();
-  }, []);
+  }, [threshold]);
 
   return ref;
 }
