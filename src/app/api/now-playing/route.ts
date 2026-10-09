@@ -54,9 +54,18 @@ async function findPreview(title: string, artist: string) {
   }
 }
 
+// Why the island is empty, reported in a response header (never includes secrets).
+let status = "ok";
+
 async function getAccessToken() {
   const { SPOTIFY_CLIENT_ID, SPOTIFY_CLIENT_SECRET, SPOTIFY_REFRESH_TOKEN } = process.env;
-  if (!SPOTIFY_CLIENT_ID || !SPOTIFY_CLIENT_SECRET || !SPOTIFY_REFRESH_TOKEN) return null;
+  const missing = Object.entries({ SPOTIFY_CLIENT_ID, SPOTIFY_CLIENT_SECRET, SPOTIFY_REFRESH_TOKEN })
+    .filter(([, v]) => !v?.trim())
+    .map(([k]) => k);
+  if (missing.length) {
+    status = `missing ${missing.join(", ")}`;
+    return null;
+  }
 
   const res = await fetch("https://accounts.spotify.com/api/token", {
     method: "POST",
@@ -64,9 +73,13 @@ async function getAccessToken() {
       Authorization: `Basic ${Buffer.from(`${SPOTIFY_CLIENT_ID}:${SPOTIFY_CLIENT_SECRET}`).toString("base64")}`,
       "Content-Type": "application/x-www-form-urlencoded",
     },
-    body: new URLSearchParams({ grant_type: "refresh_token", refresh_token: SPOTIFY_REFRESH_TOKEN }),
+    body: new URLSearchParams({ grant_type: "refresh_token", refresh_token: SPOTIFY_REFRESH_TOKEN! }),
   });
-  if (!res.ok) return null;
+  if (!res.ok) {
+    const err: { error?: string } = await res.json().catch(() => ({}));
+    status = `token refresh failed: ${res.status} ${err.error ?? ""}`.trim();
+    return null;
+  }
   const data: { access_token: string } = await res.json();
   return data.access_token;
 }
@@ -81,7 +94,10 @@ async function getNowPlaying(token: string): Promise<NowPlaying | null> {
   }
 
   const recent = await fetch("https://api.spotify.com/v1/me/player/recently-played?limit=1", { headers });
-  if (!recent.ok) return null;
+  if (!recent.ok) {
+    status = `recently-played failed: ${recent.status}`;
+    return null;
+  }
   const data: { items: { track: SpotifyTrack; played_at: string }[] } = await recent.json();
   const last = data.items[0];
   return last ? toNowPlaying(last.track, false, last.played_at, null) : null;
@@ -89,10 +105,14 @@ async function getNowPlaying(token: string): Promise<NowPlaying | null> {
 
 export async function GET() {
   await connection();
+  status = "ok";
   const token = await getAccessToken();
   const track = token ? await getNowPlaying(token) : null;
   if (track) track.previewUrl = await findPreview(track.title, track.artist);
   return Response.json(track, {
-    headers: { "Cache-Control": "public, s-maxage=15, stale-while-revalidate=30" },
+    headers: {
+      "Cache-Control": "public, s-maxage=15, stale-while-revalidate=30",
+      "X-Now-Playing-Status": status,
+    },
   });
 }
