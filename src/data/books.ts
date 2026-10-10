@@ -87,10 +87,11 @@ export const books: Book[] = [
     width: 18,
   },
   {
-    // Standard Edition hardcover (William Morrow, ISBN 9780063583597). No spine photo
-    // exists yet, so it uses a drawn spine in the cover's colors until there is one.
+    // Hardcover (William Morrow). Spine photo from a PangoBooks listing of the Deluxe
+    // edition, which shares the Standard edition's jacket spine.
     id: "taipei-story",
     cover: "/books/taipei-story.jpg",
+    spine: "/books/spines/taipei-story.jpg",
     coverRatio: 229 / 389,
     title: "Taipei Story",
     author: "R. F. Kuang",
@@ -99,7 +100,7 @@ export const books: Book[] = [
     color: "#22304b",
     ink: "#f4efe4",
     height: 190,
-    width: 22,
+    width: 19,
   },
   {
     id: "little-prince",
