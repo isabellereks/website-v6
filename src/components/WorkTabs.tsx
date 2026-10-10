@@ -76,9 +76,13 @@ export default function WorkTabs() {
         {tab === "Writing" && (
           // v4-style rows: year, title, date, with hairlines between.
           <div>
-            <ul className="divide-y divide-rule">
+            <ul>
               {writing.map((essay, i) => (
-                <li key={essay.url}>
+                // A hairline only where the year changes.
+                <li
+                  key={essay.url}
+                  className={i > 0 && writing[i - 1].date.slice(-4) !== essay.date.slice(-4) ? "border-t border-rule" : undefined}
+                >
                   <a
                     href={essay.url}
                     target="_blank"
