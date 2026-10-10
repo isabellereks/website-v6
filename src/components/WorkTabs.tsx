@@ -94,7 +94,7 @@ export default function WorkTabs() {
                       <span aria-hidden className="ml-1 text-[14px] text-[#c7c7cc] transition-colors group-hover:text-muted">
                         ↗
                       </span>
-                      {essay.publication && <span className="ml-2 text-[14px] text-muted">{essay.publication}</span>}
+                      {essay.publication && <span className="block text-[14px] leading-5 text-muted">{essay.publication}</span>}
                     </span>
                     <span className="text-[14px] text-[#c7c7cc]">{essay.date.slice(0, -5)}</span>
                   </a>
