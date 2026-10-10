@@ -95,7 +95,9 @@ async function getNowPlaying(token: string): Promise<NowPlaying | null> {
   const current = await fetch("https://api.spotify.com/v1/me/player/currently-playing", { headers });
   if (current.status === 200) {
     const data: { is_playing: boolean; progress_ms: number | null; item: SpotifyTrack | null } = await current.json();
-    if (data.is_playing && data.item) return toNowPlaying(data.item, true, null, data.progress_ms);
+    // Use the current track even when paused; "recently played" only lists songs
+    // played 30s+ and updates late, so it can show an older song.
+    if (data.item) return toNowPlaying(data.item, data.is_playing, null, data.progress_ms);
   }
 
   const recent = await fetch("https://api.spotify.com/v1/me/player/recently-played?limit=1", { headers });

@@ -228,8 +228,9 @@ export default function NowPlaying() {
   const usingPreview = previewStarted;
   const elapsed = usingPreview
     ? preview.current * 1000
-    : track?.isPlaying && track.progressMs !== null
-      ? Math.min(track.durationMs, track.progressMs + (liveClock.now - liveClock.fetchedAt))
+    : track?.progressMs != null
+      ? // Playing: advance between fetches. Paused: hold where Spotify says it stopped.
+        Math.min(track.durationMs, track.progressMs + (track.isPlaying ? liveClock.now - liveClock.fetchedAt : 0))
       : 0;
   const total = usingPreview ? preview.duration * 1000 : (track?.durationMs ?? 30_000);
 
@@ -241,7 +242,11 @@ export default function NowPlaying() {
           type="button"
           aria-expanded={open}
           aria-controls="island-card"
-          aria-label={track ? `${track.isPlaying ? "Now playing" : "Last played"}: ${track.title} by ${track.artist}` : "Music"}
+          aria-label={
+            track
+              ? `${track.isPlaying ? "Now playing" : track.progressMs != null ? "Paused" : "Last played"}: ${track.title} by ${track.artist}`
+              : "Music"
+          }
           onClick={() => setOpen(true)}
           className="island-compact absolute inset-0 flex items-center justify-between pr-[12px] pl-[7px]"
         >
