@@ -27,7 +27,7 @@ function spineLayout(book: Book) {
 }
 
 // Stripe Press style shelf, ported from the current isabellereks.com: hovering a spine
-// pulls the book out and turns it to show the cover; clicking opens it.
+// pulls the book out and turns it to show the cover; clicking opens it in a new tab.
 export default function Bookshelf() {
   const [previewedId, setPreviewedId] = useState<string | null>(null);
   const [openingId, setOpeningId] = useState<string | null>(null);
@@ -106,7 +106,13 @@ export default function Bookshelf() {
       animationsRef.current.push(open);
       await open.finished;
       if (animationsRef.current !== animations) return;
-      window.location.assign(book.href);
+      // Open the book's page in a new tab, then put the book back on the shelf.
+      const tab = window.open(book.href, "_blank", "noopener,noreferrer");
+      if (!tab) window.location.assign(book.href); // popup blocked: fall back to this tab
+      animations.forEach((animation) => animation.cancel());
+      animationsRef.current = [];
+      setOpeningId(null);
+      setPreviewedId(null);
     } catch {
       if (animationsRef.current === animations) {
         animationsRef.current = [];
@@ -133,6 +139,8 @@ export default function Bookshelf() {
                 key={book.id}
                 className="book-slot"
                 href={book.href}
+                target="_blank"
+                rel="noopener noreferrer"
                 style={style}
                 aria-label={`Open ${book.title} by ${book.author}`}
                 aria-busy={openingId === book.id}

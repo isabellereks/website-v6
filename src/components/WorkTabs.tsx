@@ -19,11 +19,12 @@ function TabPill({ tab, onChange }: { tab: Tab; onChange: (t: Tab) => void }) {
 
   useLayoutEffect(() => {
     const el = refs.current[tab];
-    if (el) setBox({ left: el.offsetLeft, width: el.offsetWidth });
+    // Tabs fill the pill edge to edge (no dead space); the highlight sits 4px inside.
+    if (el) setBox({ left: el.offsetLeft + 4, width: el.offsetWidth - 8 });
   }, [tab]);
 
   return (
-    <div role="tablist" aria-label="Sections" className="relative flex w-fit gap-1 rounded-full bg-[#f2f2f4] p-1">
+    <div role="tablist" aria-label="Sections" className="relative flex w-fit overflow-hidden rounded-full bg-[#f2f2f4] select-none">
       {box && (
         <span
           aria-hidden
@@ -43,7 +44,7 @@ function TabPill({ tab, onChange }: { tab: Tab; onChange: (t: Tab) => void }) {
           aria-selected={tab === t}
           aria-controls={`panel-${t}`}
           onClick={() => onChange(t)}
-          className={`relative z-10 rounded-full px-4 py-1.5 text-[13px] transition-colors duration-150 ${
+          className={`relative z-10 px-[22px] py-[10px] text-[13px] transition-colors duration-150 ${
             tab === t ? "font-medium text-ink" : "text-muted hover:text-ink"
           }`}
         >
@@ -87,6 +88,9 @@ export default function WorkTabs() {
                     <span className="text-[#c7c7cc] tabular-nums">{essay.date.slice(-4)}</span>
                     <span className="text-ink transition-colors group-hover:text-muted">
                       {essay.title}
+                      <span aria-hidden className="ml-1 text-[14px] text-[#c7c7cc] transition-colors group-hover:text-muted">
+                        ↗
+                      </span>
                       {essay.publication && <span className="ml-2 text-[14px] text-muted">{essay.publication}</span>}
                     </span>
                     <span className="text-[14px] text-[#c7c7cc] tabular-nums">{essay.date}</span>
@@ -100,7 +104,7 @@ export default function WorkTabs() {
               rel="noopener noreferrer"
               className="link mt-3 inline-block text-[14px] !text-muted"
             >
-              Read more on Substack →
+              Read more on Substack ↗
             </a>
           </div>
         )}

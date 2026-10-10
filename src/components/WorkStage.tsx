@@ -163,9 +163,11 @@ export default function WorkStage() {
   const go = (next: number) => setIndex((next + projects.length) % projects.length);
 
   // Focused position is the window's center, in page coordinates.
-  // Fit label + laptop + controls (+ details when open) in the window: center
+  // Fit label + laptop + controls + details in the window: center
   // the group, and shrink the laptop if the window is too short for all of it.
-  const extra = detailsOpen ? detailsHeight + 12 : 0;
+  // Always leave room for the details, so opening them reveals text downward
+  // without moving anything (the trigger stays under the cursor).
+  const extra = detailsHeight + 12;
   const room = layout.vh - LABEL_SPACE - CONTROLS_SPACE - extra - 24;
   const focusScale = layout.laptopHeight ? Math.min(1, Math.max(0.5, room / layout.laptopHeight)) : 1;
   const visibleHeight = layout.laptopHeight * focusScale;
@@ -193,6 +195,7 @@ export default function WorkStage() {
         <a className="link" href={project.url} target="_blank" rel="noopener noreferrer">
           {project.name}
         </a>
+        <span aria-hidden className="text-muted"> ↗</span>
         <span className="text-muted"> · {project.year}</span>
       </div>
 
