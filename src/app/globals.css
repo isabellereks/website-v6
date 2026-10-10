@@ -37,6 +37,7 @@
   --color-muted: #6e6e73;
   --color-rule: #e8e8ed;
   --color-rose: #ad606e;
+  --color-masthead: #8f426e; /* muted magenta, from the Arc toolbar */
   --font-sans: var(--font-open-runde), -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
   --font-display: "PP Neue Gstaad", var(--font-inter-tight), sans-serif;
 }
@@ -64,7 +65,7 @@ html {
 
 /* A thin rose rule across the top, like a magazine masthead. */
 body {
-  border-top: 4px solid var(--color-rose);
+  border-top: 8px solid var(--color-masthead);
   background: var(--color-paper);
   color: var(--color-ink);
   font-family: var(--font-sans);
