@@ -103,6 +103,26 @@ export default function WorkStage() {
     };
   }, [mounted]);
 
+  // The embedded site only becomes interactive once the laptop has landed and the
+  // scroll that opened it has fully stopped; otherwise trackpad momentum spills
+  // into the iframe and the screen jitters.
+  const [settled, setSettled] = useState(false);
+  useEffect(() => {
+    if (!focused) return;
+    const openedAt = performance.now();
+    const id = setInterval(() => {
+      const now = performance.now();
+      if (now - openedAt > 850 && now - wheelGesture.last > 400) {
+        setSettled(true);
+        clearInterval(id);
+      }
+    }, 100);
+    return () => {
+      clearInterval(id);
+      setSettled(false);
+    };
+  }, [focused]);
+
   // Fade the intro and hold the page still while focused.
   useEffect(() => {
     const html = document.documentElement;
@@ -227,7 +247,7 @@ export default function WorkStage() {
               aria-hidden={i !== index}
               inert={i !== index}
             >
-              <LaptopEmbed url={p.url} title={p.name} active={i === index} interactive={focused && i === index} />
+              <LaptopEmbed url={p.url} title={p.name} active={i === index} interactive={focused && settled && i === index} />
             </div>
           ))}
         </div>
