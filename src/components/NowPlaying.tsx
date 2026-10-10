@@ -100,6 +100,9 @@ const Icon = {
 export default function NowPlaying() {
   const [track, setTrack] = useState<Track | null>(null);
   const [open, setOpen] = useState(false);
+  // On load the island starts as a small pill, then springs out once the track
+  // arrives (like music starting on an iPhone).
+  const [booted, setBooted] = useState(false);
   const [previewPlaying, setPreviewPlaying] = useState(false);
   const [preview, setPreview] = useState({ current: 0, duration: 30 });
   const islandRef = useRef<HTMLDivElement>(null);
@@ -131,7 +134,17 @@ export default function NowPlaying() {
           }
         })
         .catch(() => {});
-    load();
+    // Expand once the first track arrives, but never wait longer than ~0.9s.
+    const bootStart = performance.now();
+    const boot = () => {
+      const wait = Math.max(0, 450 - (performance.now() - bootStart));
+      setTimeout(() => !cancelled && setBooted(true), wait);
+    };
+    const bootFallback = setTimeout(boot, 900);
+    load().finally(() => {
+      clearTimeout(bootFallback);
+      boot();
+    });
     // Poll every 10s while the tab is visible, and refresh as soon as it comes back.
     const id = setInterval(() => {
       if (document.visibilityState === "visible") load();
@@ -143,6 +156,7 @@ export default function NowPlaying() {
       clearInterval(id);
       clearTimeout(songEnd);
       document.removeEventListener("visibilitychange", onVisible);
+      clearTimeout(bootFallback);
       audioRef.current?.pause();
     };
   }, []);
@@ -205,7 +219,7 @@ export default function NowPlaying() {
 
   return (
     <div className="relative h-[34px] w-[180px]">
-      <div ref={islandRef} className="island absolute top-0 left-1/2 z-50 -translate-x-1/2" data-open={open}>
+      <div ref={islandRef} className="island absolute top-0 left-1/2 z-50 -translate-x-1/2" data-open={open} data-booted={booted}>
         {/* One album art that grows from the pill into the card, like iOS. */}
         <span aria-hidden className="island-art pointer-events-none absolute z-10 overflow-hidden bg-[#2c2c2e]">
           {track?.albumArt ? (

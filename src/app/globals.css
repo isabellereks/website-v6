@@ -218,7 +218,9 @@ body {
   box-shadow: 0 24px 60px -12px rgb(0 0 0 / 0.35);
 }
 .island-compact {
-  transition: opacity 200ms var(--ease) 180ms;
+  transition:
+    opacity 300ms var(--ease) 220ms,
+    transform 600ms var(--spring) 150ms;
 }
 .island[data-open="true"] .island-compact {
   opacity: 0;
@@ -246,6 +248,24 @@ body {
     transform 420ms var(--ease) 100ms,
     filter 280ms var(--ease) 140ms;
 }
+/* Load-in: a small pill that appears, then springs out to the live activity. */
+.island {
+  animation: island-appear 500ms var(--ease) both;
+}
+@keyframes island-appear {
+  from {
+    opacity: 0;
+    transform: scale(0.6);
+  }
+}
+.island[data-booted="false"] {
+  width: 96px;
+}
+.island[data-booted="false"] .island-art,
+.island[data-booted="false"] .island-compact {
+  opacity: 0;
+  transform: scale(0.6);
+}
 .island-art {
   left: 7px;
   top: 6.5px;
@@ -257,7 +277,9 @@ body {
     top 750ms var(--spring),
     width 750ms var(--spring),
     height 750ms var(--spring),
-    border-radius 750ms var(--spring);
+    border-radius 750ms var(--spring),
+    opacity 400ms var(--ease) 200ms,
+    transform 600ms var(--spring) 150ms;
 }
 .island[data-open="true"] .island-art {
   left: 18px;
@@ -281,6 +303,7 @@ body {
   .island-compact,
   .island-card {
     transition: none;
+    animation: none;
   }
   .island-bar {
     animation: none;

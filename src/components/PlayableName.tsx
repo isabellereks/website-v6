@@ -79,14 +79,13 @@ function rotate() {
   }
 }
 
-// liam.cv-style name: letters hop and blush on hover, and each one plays the
-// next note of a K-pop hook (a different song each visit). Browsers only allow sound after a visitor's first
+// liam.cv-style name: letters hop and blush on hover; clicking plays a K-pop
+// hook (a different song each visit). Browsers only allow sound after a visitor's first
 // click or keypress, so audio unlocks then.
 export default function PlayableName() {
   const audioRef = useRef<AudioContext | null>(null);
   const songRef = useRef(parseTab(SONGS[0].tab));
   const songMsRef = useRef(SONGS[0].stepMs);
-  const nextNoteRef = useRef(0);
   const playbackRef = useRef<ReturnType<typeof setTimeout>[]>([]);
   const lettersRef = useRef<(HTMLSpanElement | null)[]>([]);
 
@@ -132,7 +131,7 @@ export default function PlayableName() {
 
   const hop = (i: number) => {
     if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
-    const lift = [-7, -3, -1];
+    const lift = [-10, -4, -1.5];
     for (let d = -2; d <= 2; d++) {
       const el = lettersRef.current[i + d];
       if (!el) continue;
@@ -147,13 +146,8 @@ export default function PlayableName() {
     }
   };
 
-  // Each hover plays the next note, so sweeping across the name plays the song.
-  const play = (i: number) => {
-    hop(i);
-    const notes = songRef.current;
-    note(notes[nextNoteRef.current % notes.length].freq);
-    nextNoteRef.current += 1;
-  };
+  // Hover just animates the letters; the song only plays on click.
+  const play = (i: number) => hop(i);
 
   // Click plays the whole song (click again to stop), letters hopping along.
   const playSong = () => {
