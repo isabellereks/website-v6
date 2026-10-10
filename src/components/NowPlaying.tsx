@@ -65,34 +65,21 @@ function Waveform({ playing, tint, height }: { playing: boolean; tint: string | 
   );
 }
 
-function Art({ src, size, radius }: { src: string | null | undefined; size: number; radius: number }) {
-  if (!src) {
-    return (
-      <span
-        aria-hidden
-        className="grid shrink-0 place-items-center bg-[#2c2c2e] text-[#8e8e93]"
-        style={{ width: size, height: size, borderRadius: radius, fontSize: size * 0.42 }}
-      >
-        ♪
-      </span>
-    );
-  }
-  // eslint-disable-next-line @next/next/no-img-element
-  return <img src={src} alt="" className="shrink-0 object-cover" style={{ width: size, height: size, borderRadius: radius }} />;
-}
-
 // Filled transport icons drawn to match iOS's backward/play/pause/forward glyphs.
 const Icon = {
+  // Jump back / forward 10 seconds (circular arrow with "10"), like iOS.
   back: (
-    <svg viewBox="0 0 34 20" width="27" height="16" fill="currentColor" aria-hidden>
-      <path d="M15.2 2.6c0-1.3-1.4-2-2.4-1.3L1.6 8.7c-.9.6-.9 2 0 2.6l11.2 7.4c1 .7 2.4 0 2.4-1.3z" />
-      <path d="M32.2 2.6c0-1.3-1.4-2-2.4-1.3L18.6 8.7c-.9.6-.9 2 0 2.6l11.2 7.4c1 .7 2.4 0 2.4-1.3z" />
+    <svg viewBox="0 0 28 28" width="28" height="28" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden>
+      <path d="M14 5.5a9 9 0 1 1-8.5 6" />
+      <path d="M14 2.5 L10.5 5.5 L14 8.5" fill="currentColor" strokeLinejoin="round" />
+      <text x="14.2" y="18.2" textAnchor="middle" fontSize="8" fontWeight="700" fill="currentColor" stroke="none" fontFamily="-apple-system, BlinkMacSystemFont, sans-serif">10</text>
     </svg>
   ),
   forward: (
-    <svg viewBox="0 0 34 20" width="27" height="16" fill="currentColor" aria-hidden>
-      <path d="M1.8 2.6c0-1.3 1.4-2 2.4-1.3l11.2 7.4c.9.6.9 2 0 2.6L4.2 18.7c-1 .7-2.4 0-2.4-1.3z" />
-      <path d="M18.8 2.6c0-1.3 1.4-2 2.4-1.3l11.2 7.4c.9.6.9 2 0 2.6l-11.2 7.4c-1 .7-2.4 0-2.4-1.3z" />
+    <svg viewBox="0 0 28 28" width="28" height="28" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden>
+      <path d="M14 5.5a9 9 0 1 0 8.5 6" />
+      <path d="M14 2.5 L17.5 5.5 L14 8.5" fill="currentColor" strokeLinejoin="round" />
+      <text x="13.8" y="18.2" textAnchor="middle" fontSize="8" fontWeight="700" fill="currentColor" stroke="none" fontFamily="-apple-system, BlinkMacSystemFont, sans-serif">10</text>
     </svg>
   ),
   play: (
@@ -114,9 +101,7 @@ export default function NowPlaying() {
   const [track, setTrack] = useState<Track | null>(null);
   const [open, setOpen] = useState(false);
   const [previewPlaying, setPreviewPlaying] = useState(false);
-  const [previewStarted, setPreviewStarted] = useState(false);
   const [preview, setPreview] = useState({ current: 0, duration: 30 });
-  const [liveClock, setLiveClock] = useState({ fetchedAt: 0, now: 0 });
   const islandRef = useRef<HTMLDivElement>(null);
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const tint = useAlbumTint(track?.albumArt);
@@ -135,12 +120,10 @@ export default function NowPlaying() {
               audioRef.current.pause();
               audioRef.current = null;
               setPreviewPlaying(false);
-              setPreviewStarted(false);
               setPreview({ current: 0, duration: 30 });
             }
             return t;
           });
-          setLiveClock({ fetchedAt: Date.now(), now: Date.now() });
           // Check again right when the current song should end.
           clearTimeout(songEnd);
           if (t?.isPlaying && t.progressMs !== null) {
@@ -164,13 +147,6 @@ export default function NowPlaying() {
     };
   }, []);
 
-  // Advance her live listening position between fetches.
-  useEffect(() => {
-    if (!open || !track?.isPlaying) return;
-    const id = setInterval(() => setLiveClock((c) => ({ ...c, now: Date.now() })), 1000);
-    return () => clearInterval(id);
-  }, [open, track?.isPlaying]);
-
   useEffect(() => {
     if (!open) return;
     const onPointer = (e: PointerEvent) => {
@@ -193,7 +169,6 @@ export default function NowPlaying() {
       a.addEventListener("loadedmetadata", () => setPreview({ current: a.currentTime, duration: a.duration || 30 }));
       a.addEventListener("ended", () => setPreviewPlaying(false));
       audioRef.current = a;
-      setPreviewStarted(true);
     }
     return audioRef.current;
   };
@@ -209,11 +184,11 @@ export default function NowPlaying() {
     }
   };
 
-  const restart = () => {
+  const jumpBack = () => {
     const a = audio();
     if (!a) return;
-    a.currentTime = 0;
-    setPreview((p) => ({ ...p, current: 0 }));
+    a.currentTime = Math.max(0, a.currentTime - 10);
+    setPreview((p) => ({ ...p, current: a.currentTime }));
   };
 
   const skip = () => {
@@ -222,21 +197,25 @@ export default function NowPlaying() {
     a.currentTime = Math.min((a.duration || 30) - 0.1, a.currentTime + 10);
   };
 
-  const animating = previewPlaying || (!previewStarted && !!track?.isPlaying);
-
-  // The scrubber follows the preview once a visitor plays it; otherwise her live position.
-  const usingPreview = previewStarted;
-  const elapsed = usingPreview
-    ? preview.current * 1000
-    : track?.progressMs != null
-      ? // Playing: advance between fetches. Paused: hold where Spotify says it stopped.
-        Math.min(track.durationMs, track.progressMs + (track.isPlaying ? liveClock.now - liveClock.fetchedAt : 0))
-      : 0;
-  const total = usingPreview ? preview.duration * 1000 : (track?.durationMs ?? 30_000);
+  // The card is a preview player (like liam.cv): it stays still at 0:00 / -0:30
+  // until a visitor presses play, and the waveform only moves while it plays.
+  const animating = previewPlaying;
+  const elapsed = preview.current * 1000;
+  const total = preview.duration * 1000;
 
   return (
     <div className="relative h-[34px] w-[180px]">
       <div ref={islandRef} className="island absolute top-0 left-1/2 z-50 -translate-x-1/2" data-open={open}>
+        {/* One album art that grows from the pill into the card, like iOS. */}
+        <span aria-hidden className="island-art pointer-events-none absolute z-10 overflow-hidden bg-[#2c2c2e]">
+          {track?.albumArt ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img src={track.albumArt} alt="" className="h-full w-full object-cover" />
+          ) : (
+            <span className="grid h-full w-full place-items-center text-[#8e8e93]">♪</span>
+          )}
+        </span>
+
         {/* Compact: art leading, waveform trailing, camera space in the middle */}
         <button
           type="button"
@@ -250,16 +229,14 @@ export default function NowPlaying() {
           onClick={() => setOpen(true)}
           className="island-compact absolute inset-0 flex items-center justify-between pr-[12px] pl-[7px]"
         >
-          <Art src={track?.albumArt} size={21} radius={5} />
+          <span className="w-[21px]" />
           <Waveform playing={animating} tint={tint} height={12} />
         </button>
 
         {/* Expanded, matching liam.cv / iOS: art + title, scrubber, centered transport */}
         <div id="island-card" className="island-card absolute inset-0 flex flex-col px-[18px] pt-[18px] pb-[16px]" inert={!open}>
           <div className="flex items-center gap-[14px]">
-            <a href={track?.url ?? "https://open.spotify.com"} target="_blank" rel="noopener noreferrer" aria-label="Open in Spotify">
-              <Art src={track?.albumArt} size={52} radius={11} />
-            </a>
+            <span className="h-[52px] w-[52px] shrink-0" />
             <div className="min-w-0 flex-1">
               <p className="truncate text-[16px] leading-[21px] font-semibold tracking-[-0.3px] text-white">
                 {track?.title ?? "Not Playing"}
@@ -279,9 +256,9 @@ export default function NowPlaying() {
           <div className="mt-auto flex items-center justify-center gap-[48px] text-white">
             <button
               type="button"
-              onClick={restart}
+              onClick={jumpBack}
               disabled={!track?.previewUrl || elapsed < 1000}
-              aria-label="Restart"
+              aria-label="Back 10 seconds"
               className="transition-opacity active:opacity-50 disabled:opacity-35"
             >
               {Icon.back}
@@ -299,7 +276,7 @@ export default function NowPlaying() {
               type="button"
               onClick={skip}
               disabled={!track?.previewUrl}
-              aria-label="Skip ahead 10 seconds"
+              aria-label="Forward 10 seconds"
               className="transition-opacity active:opacity-50 disabled:opacity-35"
             >
               {Icon.forward}

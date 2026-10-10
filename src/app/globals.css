@@ -244,6 +244,26 @@ body {
     transform 420ms var(--ease) 100ms,
     filter 280ms var(--ease) 140ms;
 }
+.island-art {
+  left: 7px;
+  top: 6.5px;
+  width: 21px;
+  height: 21px;
+  border-radius: 5px;
+  transition:
+    left 750ms var(--spring),
+    top 750ms var(--spring),
+    width 750ms var(--spring),
+    height 750ms var(--spring),
+    border-radius 750ms var(--spring);
+}
+.island[data-open="true"] .island-art {
+  left: 18px;
+  top: 18px;
+  width: 52px;
+  height: 52px;
+  border-radius: 11px;
+}
 .island-bar {
   height: 3px;
   animation: island-bar 800ms ease-in-out infinite alternate;
@@ -255,6 +275,7 @@ body {
 }
 @media (prefers-reduced-motion: reduce) {
   .island,
+  .island-art,
   .island-compact,
   .island-card {
     transition: none;
