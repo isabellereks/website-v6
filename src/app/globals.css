@@ -56,6 +56,8 @@ body {
 }
 
 html {
+  /* Keep the scrollbar's space reserved, so locking scroll (open laptop) doesn't shift the page. */
+  scrollbar-gutter: stable;
   scroll-behavior: smooth;
   scroll-padding-top: 4rem;
 }

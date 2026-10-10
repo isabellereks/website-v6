@@ -56,8 +56,12 @@ export default function WorkStage() {
   // Scroll gestures that began before the stage appeared (or before the last
   // open/close) are trackpad momentum, not intent, so they're ignored.
   const lastToggleRef = useRef(0);
+  // Where the page was scrolled when the laptop opened. The focused position is
+  // computed from this once, so leftover page scrolling can't drag it around.
+  const [focusScrollY, setFocusScrollY] = useState(0);
   const focus = (next: boolean) => {
     lastToggleRef.current = performance.now();
+    if (next) setFocusScrollY(window.scrollY);
     setFocused(next);
     if (!next) setDetailsOpen(false);
   };
@@ -143,6 +147,8 @@ export default function WorkStage() {
   useEffect(() => {
     let touchY: number | null = null;
     const onWheel = (e: WheelEvent) => {
+      // While open, the page behind the laptop stays put.
+      if (focused) e.preventDefault();
       if (wheelGesture.start < lastToggleRef.current) return;
       const g = gestureRef.current;
       if (g.start !== wheelGesture.start) {
@@ -167,7 +173,7 @@ export default function WorkStage() {
       if (e.key === "ArrowRight") setIndex((i) => (i + 1) % projects.length);
       if (e.key === "ArrowLeft") setIndex((i) => (i - 1 + projects.length) % projects.length);
     };
-    window.addEventListener("wheel", onWheel, { passive: true });
+    window.addEventListener("wheel", onWheel, { passive: false });
     window.addEventListener("touchstart", onTouchStart, { passive: true });
     window.addEventListener("touchend", onTouchEnd);
     window.addEventListener("keydown", onKey);
@@ -192,11 +198,11 @@ export default function WorkStage() {
   const focusScale = layout.laptopHeight ? Math.min(1, Math.max(0.5, room / layout.laptopHeight)) : 1;
   const visibleHeight = layout.laptopHeight * focusScale;
   const focusTop = Math.max(LABEL_SPACE + 12, (layout.vh - visibleHeight - CONTROLS_SPACE - extra + LABEL_SPACE) / 2);
-  const focusY = layout.scrollY + focusTop;
+  const focusY = focusScrollY + focusTop;
   // Room for the resting laptop to peek below the tabs, clipped like liam.cv;
   // when focused, cover the whole window.
   const restHeight = Math.max(layout.vh, layout.restTop + PEEK);
-  const stageHeight = focused ? Math.max(restHeight, layout.scrollY + layout.vh) : restHeight;
+  const stageHeight = focused ? Math.max(restHeight, focusScrollY + layout.vh) : restHeight;
 
   const stage = (
     <div
