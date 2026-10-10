@@ -261,7 +261,21 @@ body {
     transform: scale(0.6);
   }
 }
-.island[data-booted="false"] {
+.island[data-playing="false"]:not([data-open="true"]) {
+  width: 116px;
+}
+.island-wave {
+  display: flex;
+  transition:
+    opacity 250ms var(--ease),
+    transform 500ms var(--spring);
+}
+.island[data-playing="false"] .island-wave {
+  opacity: 0;
+  transform: scale(0.6);
+}
+/* Doubled class so the load-in size wins over the paused size. */
+.island.island[data-booted="false"] {
   width: 96px;
 }
 .island[data-booted="false"] .island-art,

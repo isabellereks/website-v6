@@ -87,6 +87,21 @@ export const books: Book[] = [
     width: 18,
   },
   {
+    // Standard Edition hardcover (William Morrow, ISBN 9780063583597). No spine photo
+    // exists yet, so it uses a drawn spine in the cover's colors until there is one.
+    id: "taipei-story",
+    cover: "/books/taipei-story.jpg",
+    coverRatio: 229 / 389,
+    title: "Taipei Story",
+    author: "R. F. Kuang",
+    category: "Fiction",
+    href: "https://www.harvard.com/book/9780063583597",
+    color: "#22304b",
+    ink: "#f4efe4",
+    height: 190,
+    width: 22,
+  },
+  {
     id: "little-prince",
     cover: "/books/little-prince.jpg",
     coverRatio: 383 / 475,

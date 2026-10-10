@@ -213,13 +213,15 @@ export default function NowPlaying() {
 
   // The card is a preview player (like liam.cv): it stays still at 0:00 / -0:30
   // until a visitor presses play, and the waveform only moves while it plays.
-  const animating = previewPlaying;
+  // Playing (her Spotify, or a visitor's preview): full pill with a moving waveform.
+  // Paused / last played: a smaller pill with just the album art.
+  const animating = previewPlaying || !!track?.isPlaying;
   const elapsed = preview.current * 1000;
   const total = preview.duration * 1000;
 
   return (
     <div className="relative h-[34px] w-[180px]">
-      <div ref={islandRef} className="island absolute top-0 left-1/2 z-50 -translate-x-1/2" data-open={open} data-booted={booted}>
+      <div ref={islandRef} className="island absolute top-0 left-1/2 z-50 -translate-x-1/2" data-open={open} data-booted={booted} data-playing={animating}>
         {/* One album art that grows from the pill into the card, like iOS. */}
         <span aria-hidden className="island-art pointer-events-none absolute z-10 overflow-hidden bg-[#2c2c2e]">
           {track?.albumArt ? (
@@ -244,7 +246,9 @@ export default function NowPlaying() {
           className="island-compact absolute inset-0 flex items-center justify-between pr-[12px] pl-[7px]"
         >
           <span className="w-[21px]" />
-          <Waveform playing={animating} tint={tint} height={12} />
+          <span className="island-wave">
+            <Waveform playing={animating} tint={tint} height={12} />
+          </span>
         </button>
 
         {/* Expanded, matching liam.cv / iOS: art + title, scrubber, centered transport */}
