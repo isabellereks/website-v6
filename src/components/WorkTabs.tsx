@@ -77,7 +77,7 @@ export default function WorkTabs() {
           // v4-style rows: year, title, date, with hairlines between.
           <div>
             <ul className="divide-y divide-rule">
-              {writing.map((essay) => (
+              {writing.map((essay, i) => (
                 <li key={essay.url}>
                   <a
                     href={essay.url}
@@ -85,7 +85,10 @@ export default function WorkTabs() {
                     rel="noopener noreferrer"
                     className="group grid grid-cols-[3.5rem_1fr_auto] items-baseline gap-x-4 py-3"
                   >
-                    <span className="text-[#c7c7cc] tabular-nums">{essay.date.slice(-4)}</span>
+                    {/* Year only on the first row of each year; the month sits on the right. */}
+                    <span className="text-[#c7c7cc] tabular-nums">
+                      {i === 0 || writing[i - 1].date.slice(-4) !== essay.date.slice(-4) ? essay.date.slice(-4) : ""}
+                    </span>
                     <span className="text-ink transition-colors group-hover:text-muted">
                       {essay.title}
                       <span aria-hidden className="ml-1 text-[14px] text-[#c7c7cc] transition-colors group-hover:text-muted">
@@ -93,7 +96,7 @@ export default function WorkTabs() {
                       </span>
                       {essay.publication && <span className="ml-2 text-[14px] text-muted">{essay.publication}</span>}
                     </span>
-                    <span className="text-[14px] text-[#c7c7cc] tabular-nums">{essay.date}</span>
+                    <span className="text-[14px] text-[#c7c7cc]">{essay.date.slice(0, -5)}</span>
                   </a>
                 </li>
               ))}
