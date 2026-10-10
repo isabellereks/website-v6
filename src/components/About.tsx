@@ -1,5 +1,4 @@
 import FlowText, { type Paragraph } from "./FlowText";
-import PhotoStack from "./PhotoStack";
 
 // All of About flows around the matcha bowl, so dragging it reshapes the whole section.
 const about: Paragraph[] = [
@@ -50,9 +49,7 @@ export default function About() {
   return (
     <div className="text-muted">
       <FlowText paragraphs={about} />
-      <div className="pt-10">
-        <PhotoStack />
-      </div>
+      {/* Photo stack (PhotoStack + src/data/photos.ts) comes back once there are real photos. */}
     </div>
   );
 }
