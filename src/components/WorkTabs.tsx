@@ -60,9 +60,7 @@ export default function WorkTabs() {
 
   return (
     <section>
-      <div className="intro-fade">
-        <TabPill tab={tab} onChange={setTab} />
-      </div>
+      <TabPill tab={tab} onChange={setTab} />
 
       <div
         key={tab}
