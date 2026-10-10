@@ -10,7 +10,7 @@ const summary: DecodePart[] = [
   "I make tech policy easier to understand through ",
   { icon: <TrackerIcon />, text: "live trackers", href: "https://trackpolicy.org", label: "Track Policy" },
   ", ",
-  { icon: <SimIcon />, text: "simulations", href: "https://policysim.policy.cafe", label: "PolicySim" },
+  { icon: <SimIcon />, text: "simulations", href: "https://ai-gov-simulator.vercel.app", label: "PolicySim" },
   ", and ",
   { icon: <MapIcon />, text: "data maps", href: "https://corruption-map.vercel.app", label: "Corruption Map" },
   ".",

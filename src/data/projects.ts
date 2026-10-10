@@ -28,7 +28,7 @@ export const projects: Project[] = [
     ],
     stack: "React, Next.js",
     year: "2026",
-    url: "https://policysim.policy.cafe",
+    url: "https://ai-gov-simulator.vercel.app",
   },
   {
     name: "Corruption Map",
