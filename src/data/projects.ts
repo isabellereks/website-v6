@@ -20,6 +20,17 @@ export const projects: Project[] = [
     url: "https://trackpolicy.org",
   },
   {
+    name: "Track Migrations",
+    tagline: "Immigration to the US: where people crossed, where they settled, and why they came.",
+    details: [
+      "Scroll through Border Patrol encounters by sector, origin countries, and settlement by state.",
+      "Combines CBP encounter records, Census ACS foreign-born estimates, USCIS admissions and refugee arrivals, each measuring a different population.",
+    ],
+    stack: "Next.js, CBP, Census ACS, USCIS",
+    year: "2026",
+    url: "https://trackmigrations.org",
+  },
+  {
     name: "PolicySim",
     tagline: "Watch a bill move through the US government, vote by vote.",
     details: [
